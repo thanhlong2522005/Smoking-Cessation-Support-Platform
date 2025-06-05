@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background-color: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
+        .header h1 { color: #007bff; margin: 0; }
+        .header .user-info { font-size: 1.1em; color: #555; }
+        .header .logout-form { display: inline; margin-left: 20px; }
+        .header .logout-form button { background-color: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 1em; }
+        .header .logout-form button:hover { background-color: #c82333; }
+        .dashboard-content { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
+        .section-title { color: #333; margin-top: 30px; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; color: #333; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .status-active { color: green; font-weight: bold; }
+        .status-inactive { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Admin Dashboard</h1>
+        <div class="user-info">
+            Bạn đã đăng nhập với vai trò:
+            <strong sec:authentication="principal.authorities"></strong>
+            (<span sec:authentication="name"></span>)
+
+            <form th:action="@{/logout}" method="post" class="logout-form">
+                <button type="submit">Đăng xuất</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="dashboard-content">
+        <h3 class="section-title">Tổng quan người dùng</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tên đăng nhập</th>
+                    <th>Email</th>
+                    <th>Vai trò</th>
+                    <th>Ngày đăng ký</th>
+                    <th>Trạng thái</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="user : ${users}">
+                    <td th:text="${user.id}"></td>
+                    <td th:text="${user.username}"></td>
+                    <td th:text="${user.email}"></td>
+                    <td th:text="${user.role}"></td>
+                    <td th:text="${#temporals.format(user.registrationDate, 'dd-MM-yyyy HH:mm')}"></td>
+                    <td th:class="${user.active ? 'status-active' : 'status-inactive'}" th:text="${user.active ? 'Active' : 'Inactive'}"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3 class="section-title">Quản lý phản hồi (Feedback)</h3>
+        <p>Chức năng này sẽ được thêm vào sau.</p>
+
+        <h3 class="section-title">Huy hiệu thành tích</h3>
+        <p>Chức năng này sẽ được thêm vào sau.</p>
+    </div>
+</body>
+</html>

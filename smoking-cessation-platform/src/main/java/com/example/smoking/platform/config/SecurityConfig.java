@@ -21,6 +21,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(authorize -> authorize
                 // Cho phép truy cập các URL này mà không cần xác thực
                 .requestMatchers("/", "/register", "/css/**", "/js/**", "/images/**", "/api/public/**").permitAll()
+                .requestMatchers("/admin/**").hasRole("ADMIN")
                 // Yêu cầu xác thực cho tất cả các request khác
                 .anyRequest().authenticated()
             )

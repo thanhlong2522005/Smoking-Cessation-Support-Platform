@@ -21,4 +21,14 @@ public class HomeController {
     public String dashboard() {
         return "dashboard";
     }
+    
+    @GetMapping("/log-smoking") // Trang ghi nhận tình trạng hút thuốc
+    public String logSmoking() {
+        return "log-smoking";
+    }
+
+    @GetMapping("/view-logs") // Trang xem danh sách log hút thuốc
+    public String viewLogs() {
+        return "view-logs";
+    }
 }

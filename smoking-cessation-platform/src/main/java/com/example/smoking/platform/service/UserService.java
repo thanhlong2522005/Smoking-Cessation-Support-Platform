@@ -1,16 +1,17 @@
 package com.example.smoking.platform.service;
 
-import com.example.smoking.platform.model.User;
-import com.example.smoking.platform.repository.UserRepository;
-import com.example.smoking.platform.model.UserRole; // Import UserRole
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.security.crypto.password.PasswordEncoder;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.List; // Import UserRole
 import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import com.example.smoking.platform.model.User;
+import com.example.smoking.platform.model.UserRole;
+import com.example.smoking.platform.repository.UserRepository;
 
 @Service // Đánh dấu đây là một Spring Service Component
 public class UserService {
@@ -65,6 +66,10 @@ public class UserService {
     // Phương thức xóa người dùng
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
+    }
+    
+    public Optional<User> findById(Long id) {
+        return userRepository.findById(id);
     }
 
     // Phương thức ví dụ để thêm User mẫu khi khởi động ứng dụng

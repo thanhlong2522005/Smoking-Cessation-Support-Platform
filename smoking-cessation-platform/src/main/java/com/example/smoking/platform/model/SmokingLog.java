@@ -1,34 +1,61 @@
 package com.example.smoking.platform.model;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.Positive;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 @Entity
+@Table(name = "smoking_log")
+@Data
+@NoArgsConstructor
 public class SmokingLog {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(nullable = false)
     private LocalDateTime date;
-    private int cigarettesSmoked;
-    private double costPerCigarette;
-    private String frequency;
 
-    // Getters and setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
-    public LocalDateTime getDate() { return date; }
-    public void setDate(LocalDateTime date) { this.date = date; }
-    public int getCigarettesSmoked() { return cigarettesSmoked; }
-    public void setCigarettesSmoked(int cigarettesSmoked) { this.cigarettesSmoked = cigarettesSmoked; }
-    public double getCostPerCigarette() { return costPerCigarette; }
-    public void setCostPerCigarette(double costPerCigarette) { this.costPerCigarette = costPerCigarette; }
-    public String getFrequency() { return frequency; }
-    public void setFrequency(String frequency) { this.frequency = frequency; }
+    @Column(nullable = false)
+    @Positive(message = "Số điếu phải lớn hơn 0")
+    private int cigarettesSmoked;
+
+    @Column(nullable = false)
+    @Positive(message = "Giá tiền phải lớn hơn 0")
+    private double costPerCigarette;
+
+    @Column(length = 50, nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Frequency frequency;
+
+    // Enum cho tần suất
+    public enum Frequency {
+        DAILY, OCCASIONAL, WEEKLY
+    }
+
+    public SmokingLog(User user, LocalDateTime date, int cigarettesSmoked, double costPerCigarette, Frequency frequency) {
+        this.user = user;
+        this.date = date;
+        this.cigarettesSmoked = cigarettesSmoked;
+        this.costPerCigarette = costPerCigarette;
+        this.frequency = frequency;
+    }
 }

@@ -62,7 +62,33 @@
         </table>
 
         <h3 class="section-title">Quản lý phản hồi (Feedback)</h3>
-        <p>Chức năng này sẽ được thêm vào sau.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nội dung</th>
+                    <th>Người gửi</th>
+                    <th>Email người gửi</th>
+                    <th>Ngày gửi</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="feedback : ${feedbacks}">
+                    <td th:text="${feedback.id}"></td>
+                    <td th:text="${feedback.content}"></td>
+                    <td th:text="${feedback.user.username}"></td>
+                    <td th:text="${feedback.user.email}"></td>
+                    <td th:text="${#temporals.format(feedback.submissionDate, 'dd-MM-yyyy HH:mm')}"></td>
+                    <td th:class="${feedback.read ? 'status-active' : 'status-inactive'}" th:text="${feedback.read ? 'Đã đọc' : 'Chưa đọc'}"></td>
+                    <td>
+                        <a th:if="${!feedback.read}" th:href="@{/admin/feedback/mark-read/{id}(id=${feedback.id})}" style="color: green; text-decoration: none; margin-right: 5px;">Đánh dấu đã đọc</a>
+                        <a th:href="@{/admin/feedback/delete/{id}(id=${feedback.id})}" style="color: red; text-decoration: none;">Xóa</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
 
         <h3 class="section-title">Huy hiệu thành tích</h3>
         <p>Chức năng này sẽ được thêm vào sau.</p>

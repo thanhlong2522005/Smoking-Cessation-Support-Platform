@@ -20,6 +20,24 @@
         tr:nth-child(even) { background-color: #f9f9f9; }
         .status-active { color: green; font-weight: bold; }
         .status-inactive { color: red; font-weight: bold; }
+        .message {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            font-weight: bold;
+            text-align: center;
+            border: 1px solid;
+        }
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+            border-color: #c3e6cb;
+        }
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-color: #f5c6cb;
+        }
     </style>
 </head>
 <body>
@@ -37,6 +55,9 @@
     </div>
 
     <div class="dashboard-content">
+        <div th:if="${successMessage}" class="message success-message" th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="message error-message" th:text="${errorMessage}"></div>
+
         <h3 class="section-title">Tổng quan người dùng</h3>
         <table>
             <thead>
@@ -91,7 +112,38 @@
         </table>
 
         <h3 class="section-title">Huy hiệu thành tích</h3>
-        <p>Chức năng này sẽ được thêm vào sau.</p>
+        <a th:href="@{/admin/achievements/new}" style="background-color: #007bff; color: white; padding: 8px 15px; border-radius: 4px; text-decoration: none; display: inline-block; margin-bottom: 15px;">Tạo Huy hiệu mới</a>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tên</th>
+                    <th>Mô tả</th>
+                    <th>Icon</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="achievement : ${achievements}">
+                    <td th:text="${achievement.id}"></td>
+                    <td th:text="${achievement.name}"></td>
+                    <td th:text="${achievement.description}"></td>
+                    <td><img th:src="${achievement.iconUrl}" alt="Icon" style="width: 30px; height: 30px; vertical-align: middle;"></td>
+                    <td>
+                        <form th:action="@{/admin/achievements/grant}" method="post" class="grant-form">
+                            <input type="hidden" name="achievementId" th:value="${achievement.id}">
+                            <select name="userId" required>
+                                <option value="">Chọn thành viên</option>
+                                <option th:each="member : ${members}" th:value="${member.id}" th:text="${member.username}"></option>
+                            </select>
+                            <button type="submit">Gán huy hiệu</button>
+                        </form>
+                        <a th:href="@{/admin/achievements/delete/{id}(id=${achievement.id})}" style="color: red; text-decoration: none; margin-left: 10px;">Xóa</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 </body>
 </html>

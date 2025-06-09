@@ -1,10 +1,11 @@
 package com.example.smoking.platform.model;
 
-import jakarta.persistence.*; // Sửa từ javax.persistence sang jakarta.persistence cho Spring Boot 3+
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-
+import java.util.Set;
+import java.util.HashSet;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -23,7 +24,7 @@ public class User {
     private String username;
 
     @Column(nullable = false)
-    private String password; // Lưu ý: Trong thực tế cần mã hóa mật khẩu!
+    private String password; 
 
     @Column(nullable = false, unique = true, length = 100)
     private String email;
@@ -58,6 +59,12 @@ public class User {
     private String cessationGoal; // Lý do/mục tiêu cai thuốc
     private LocalDate quitStartDate; // Thời điểm bắt đầu cai
     private LocalDate expectedQuitDate; // Thời điểm dự kiến cai được
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Feedback> feedbacks = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserAchievement> userAchievements = new HashSet<>();
 
     // Constructor tùy chỉnh nếu cần
     public User(String username, String password, String email, UserRole role) {

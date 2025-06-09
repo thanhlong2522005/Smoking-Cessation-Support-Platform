@@ -1,14 +1,111 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chào mừng đến với Nền tảng Hỗ trợ Cai thuốc lá</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 40px 60px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 90%;
+        }
+        h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+        p {
+            color: #666;
+            font-size: 1.1em;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        .button-group a {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+            margin: 0 10px;
+        }
+        .button-group a:hover {
+            background-color: #0056b3;
+        }
+        .button-group a.secondary {
+            background-color: #6c757d;
+        }
+        .button-group a.secondary:hover {
+            background-color: #5a6268;
+        }
+        .logged-in-message {
+            margin-top: 30px;
+            font-size: 1.1em;
+            color: #007bff;
+            font-weight: bold;
+        }
+        .logged-in-message form {
+            display: inline-block;
+            margin-left: 10px;
+        }
+        .logged-in-message button {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+        .logged-in-message button:hover {
+            background-color: #c82333;
+        }
+    </style>
 </head>
 <body>
-    <h1>Chào mừng bạn đến với Nền tảng Hỗ trợ Cai nghiện Thuốc lá!</h1>
-    <p>Đây là trang chủ của ứng dụng web của bạn.</p>
-    <p>Hãy bắt đầu xây dựng các tính năng thú vị!</p>
-    <p>Kiểm tra console để xem dữ liệu mẫu đã được thêm vào database.</p>
+    <div class="container">
+        <h1>Chào mừng bạn đến với Nền tảng Hỗ trợ Cai thuốc lá!</h1>
+        <p>Hành trình bỏ thuốc của bạn bắt đầu từ đây. Chúng tôi cung cấp các công cụ và tài nguyên để giúp bạn đạt được mục tiêu sống khỏe mạnh hơn.</p>
+
+        <div sec:authorize="isAuthenticated()">
+            <div class="logged-in-message">
+                Xin chào, <span sec:authentication="name"></span>!
+                Bạn đã đăng nhập.
+                <div class="button-group" style="margin-top: 15px;">
+                    <a th:href="@{/dashboard}">Đi đến Bảng Điều khiển</a>
+                    <a th:if="${#authorization.expression('hasRole(''ADMIN'')')}" th:href="@{/admin/dashboard}" class="secondary">Đi đến Admin Dashboard</a>
+                </div>
+                <form th:action="@{/logout}" method="post" style="margin-top: 20px;">
+                    <button type="submit">Đăng xuất</button>
+                </form>
+            </div>
+        </div>
+
+        <div sec:authorize="isAnonymous()">
+            <p>Tham gia cộng đồng của chúng tôi ngay hôm nay để bắt đầu hành trình cai thuốc của bạn.</p>
+            <div class="button-group">
+                <a th:href="@{/login}">Đăng nhập</a>
+                <a th:href="@{/register}" class="secondary">Đăng ký</a>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

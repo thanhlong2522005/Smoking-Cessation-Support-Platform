@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Danh Sách Kế Hoạch Cai Thuốc</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        /* Tùy chỉnh bổ sung cho Tailwind */
+        .plan-card {
+            transition: transform 0.3s ease;
+        }
+
+        .plan-card:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto p-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Danh Sách Kế Hoạch Cai Thuốc</h2>
+        <div class="grid gap-6">
+            <div th:each="plan : ${quitPlans}"
+                 class="plan-card bg-white shadow-lg rounded-lg p-6 transform transition duration-300 hover:scale-105">
+                <h3 class="text-lg font-semibold text-gray-800">Lý do: <span th:text="${plan.reason}"></span></h3>
+                <p class="text-gray-600">Ngày bắt đầu: <span th:text="${#temporals.format(plan.startDate, 'dd/MM/yyyy HH:mm')}"></span></p>
+                <p class="text-gray-600" th:if="${plan.endDate}">Ngày kết thúc: <span th:text="${#temporals.format(plan.endDate, 'dd/MM/yyyy HH:mm')}"></span></p>
+                <p class="text-gray-600">Trạng thái: <span th:text="${plan.status}"
+                    th:class="${plan.status == 'COMPLETED' ? 'text-green-600 font-semibold' : (plan.status == 'FAILED' ? 'text-red-600 font-semibold' : 'text-blue-600 font-semibold')}"></span></p>
+                <h4 class="text-md font-medium text-gray-700 mt-4">Các giai đoạn:</h4>
+                <ul class="list-disc pl-5 text-gray-600">
+                    <li th:each="phase : ${plan.phases}" th:text="${phase}"></li>
+                </ul>
+            </div>
+        </div>
+        <a th:href="@{/smoking/quit-plan}"
+           class="mt-6 inline-block bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition duration-300">
+            Tạo Kế Hoạch Mới
+        </a>
+        <div class="mt-4">
+            <a th:href="@{/dashboard}" class="text-indigo-600 hover:underline">Quay lại Dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

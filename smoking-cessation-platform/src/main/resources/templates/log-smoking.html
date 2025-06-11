@@ -11,7 +11,7 @@
         <form id="smokingForm">
             <div class="mb-3">
                 <label for="userId" class="form-label">User ID</label>
-                <input type="number" class="form-control" id="userId" name="userId" value="1" readonly>
+                <input type="number" class="form-control" id="userId" name="userId" th:value="${userId}" readonly>
             </div>
             <div class="mb-3">
                 <label for="cigarettesSmoked" class="form-label">Number of Cigarettes</label>
@@ -47,11 +47,20 @@
             }
 
             const formData = {
+                // Thay đổi: Thay vì gửi object { id: userId }, chỉ gửi userId trực tiếp.
+                // Hoặc nếu SmokingLog entity của bạn có @ManyToOne User user; thì để nguyên user: { id: userId }
+                // Nhưng nếu controller nhận @RequestBody SmokingLog thì formData này phải khớp với cấu trúc entity SmokingLog
+                // Giả sử SmokingLog entity của bạn có một trường 'userId' (Long) hoặc một trường 'user' (User object)
+                // Tôi sẽ giả định bạn có 'user' object với 'id' bên trong như bạn đang gửi.
                 user: { id: document.getElementById('userId').value },
                 cigarettesSmoked: cigarettesSmoked,
                 costPerCigarette: costPerCigarette,
                 frequency: document.getElementById('frequency').value
+                // Thêm trường logDate nếu entity SmokingLog có nó (rất nên có)
+                // logDate: new Date().toISOString() // Hoặc lấy từ input nếu bạn có
             };
+
+            console.log('Sending data:', formData); // Debug: Kiểm tra dữ liệu gửi đi
 
             try {
                 const response = await fetch('/api/smoking/log', {
@@ -64,12 +73,21 @@
                 console.log('Raw response:', text); // Debug: Xem phản hồi thực tế
 
                 if (!response.ok) {
-                    const errorData = JSON.parse(text); // Thử parse nếu là JSON
-                    throw new Error(errorData.message || 'Failed to log smoking data');
+                    let errorMessage = 'Failed to log smoking data';
+                    try {
+                        const errorData = JSON.parse(text); // Thử parse nếu là JSON
+                        errorMessage = errorData.message || errorMessage;
+                    } catch (e) {
+                        // Nếu không phải JSON, dùng raw text
+                        errorMessage = `Server Error: ${text}`;
+                    }
+                    throw new Error(errorMessage);
                 }
 
                 const result = JSON.parse(text);
-                document.getElementById('response').innerHTML = `<div class="alert alert-success">${result.message}</div>`;
+                document.getElementById('response').innerHTML = `<div class="alert alert-success">${result.message || 'Dữ liệu đã được lưu thành công!'}</div>`;
+                // Tùy chọn: Xóa form sau khi gửi thành công
+                document.getElementById('smokingForm').reset();
             } catch (error) {
                 document.getElementById('response').innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
             }

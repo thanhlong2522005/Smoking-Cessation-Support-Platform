@@ -63,6 +63,31 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    // Phương thức mới để cập nhật thông tin cai thuốc
+    public User updateCessationInfo(Long userId, LocalDate quitStartDate, Integer cigarettesPerDay, Double costPerPack, String cessationGoal, LocalDate expectedQuitDate) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người dùng với ID: " + userId));
+
+        user.setQuitStartDate(quitStartDate);
+        user.setCigarettesPerDay(cigarettesPerDay);
+        user.setCostPerPack(costPerPack);
+        user.setCessationGoal(cessationGoal); // Thêm cập nhật mục tiêu cai thuốc
+        user.setExpectedQuitDate(expectedQuitDate); // Thêm cập nhật ngày dự kiến cai
+
+        // Bạn có thể thêm logic kiểm tra hoặc cập nhật `currentSmokingStatus` tại đây
+        // Ví dụ: nếu quitStartDate được set, có thể chuyển currentSmokingStatus sang "Quit Attempt" hoặc tương tự
+        // Hoặc để trống và người dùng sẽ cập nhật nó riêng.
+        // Tạm thời, chúng ta sẽ không tự động cập nhật `currentSmokingStatus` ở đây để giữ đơn giản.
+
+        return userRepository.save(user);
+    }
+
+    // Phương thức để cập nhật mật khẩu, nếu cần
+    public void updatePassword(User user, String newPassword) {
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
     // Phương thức xóa người dùng
     public void deleteUser(Long id) {
         userRepository.deleteById(id);

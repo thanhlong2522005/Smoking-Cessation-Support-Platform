@@ -2,6 +2,7 @@ package com.example.smoking.platform.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -28,4 +29,10 @@ public interface SmokingLogRepository extends JpaRepository<SmokingLog, Long> {
     // Lấy ngày cuối cùng có hút thuốc theo user
     @Query("SELECT MAX(sl.date) FROM SmokingLog sl WHERE sl.user = :user AND sl.cigarettesSmoked > 0")
     LocalDateTime findLastSmokingDateByUser(@Param("user") User user);
+
+    // Phương thức mới: Tìm nhật ký hút thuốc gần đây nhất của một người dùng
+    Optional<SmokingLog> findTopByUserOrderByDateDesc(User user);
+
+    // Phương thức mới: Tìm tất cả nhật ký hút thuốc của người dùng sau một ngày cụ thể
+    List<SmokingLog> findByUserAndDateAfter(User user, LocalDateTime date);
 }

@@ -1,9 +1,12 @@
 package com.example.smoking.platform.controller;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 import com.example.smoking.platform.model.User;
 import com.example.smoking.platform.model.UserRole;
-import com.example.smoking.platform.service.AchievementService; 
+import com.example.smoking.platform.model.SmokingLog;
+import com.example.smoking.platform.service.AchievementService;
+import com.example.smoking.platform.service.SmokingLogService;
 import com.example.smoking.platform.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication; 
@@ -20,8 +23,10 @@ public class HomeController {
 
     @Autowired
     private UserService userService;
-    @Autowired // <-- Thêm dòng này
+    @Autowired 
     private AchievementService achievementService;
+    @Autowired 
+    private SmokingLogService smokingLogService;
 
     @GetMapping("/")
     public String index() {
@@ -44,6 +49,19 @@ public class HomeController {
         } else {
             User currentUser = currentUserOptional.get();
             model.addAttribute("userAchievements", achievementService.getUserAchievements(currentUser));
+
+            // Lấy thông tin cho popup thông báo
+            Optional<SmokingLog> latestLogOptional = smokingLogService.findLatestSmokingLogByUser(currentUser);
+            model.addAttribute("latestSmokingLog", latestLogOptional.orElse(null)); // Có thể là null nếu chưa có log nào
+
+            Optional<Long> smokeFreeDays = smokingLogService.getSmokeFreeDays(currentUser);
+            model.addAttribute("smokeFreeDays", smokeFreeDays.orElse(0L)); // 0 nếu không có ngày cai hoặc đã tái nghiện
+
+            Optional<Double> potentialMoneySaved = smokingLogService.calculatePotentialMoneySaved(currentUser);
+            model.addAttribute("potentialMoneySaved", potentialMoneySaved.orElse(0.0)); // 0.0 nếu không tính toán được
+
+            // Thêm các thuộc tính người dùng cần thiết cho dashboard nếu chưa có
+            model.addAttribute("user", currentUser);
         }
         return "dashboard";
     }

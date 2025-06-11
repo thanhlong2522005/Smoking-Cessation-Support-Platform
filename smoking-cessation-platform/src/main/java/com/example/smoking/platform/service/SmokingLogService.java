@@ -5,10 +5,12 @@ import com.example.smoking.platform.repository.SmokingLogRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
@@ -100,5 +102,73 @@ public class SmokingLogService {
         } else {
             return "Tiếp tục cố gắng! Sức khỏe sẽ cải thiện sau vài ngày không hút.";
         }
+    }
+
+    // --- Các phương thức mới cho Thông báo định kỳ ---
+
+    /**
+     * Tìm nhật ký hút thuốc gần đây nhất của một người dùng.
+     *
+     * @param user Đối tượng người dùng
+     * @return Optional chứa SmokingLog gần nhất, hoặc rỗng nếu không có nhật ký nào.
+     */
+    public Optional<SmokingLog> findLatestSmokingLogByUser(User user) {
+        return smokingLogRepository.findTopByUserOrderByDateDesc(user);
+    }
+
+    /**
+     *
+     * @param user Đối tượng người dùng
+     * @return Optional chứa số ngày không hút thuốc, hoặc rỗng nếu người dùng chưa đặt ngày cai,
+     * hoặc 0L nếu người dùng đã hút thuốc trở lại sau ngày cai.
+     */
+    public Optional<Long> getSmokeFreeDays(User user) {
+        if (user.getQuitStartDate() == null) {
+            return Optional.empty(); // Không có ngày bắt đầu cai thuốc được đặt
+        }
+
+        // Kiểm tra xem có bất kỳ nhật ký hút thuốc nào tồn tại SAU ngày QuitStartDate hay không
+        // Điều này rất quan trọng để đảm bảo người dùng thực sự "không hút thuốc" kể từ ngày đó
+        List<SmokingLog> logsAfterQuitDate = smokingLogRepository.findByUserAndDateAfter(user, user.getQuitStartDate().atStartOfDay());
+
+        if (!logsAfterQuitDate.isEmpty()) {
+            // Người dùng đã hút thuốc kể từ ngày cai thuốc đã khai báo, vậy họ không còn không hút thuốc
+            return Optional.of(0L); // Chỉ ra rằng họ không còn không hút thuốc (hoặc đã tái nghiện)
+        }
+
+        // Nếu không có nhật ký nào sau ngày cai, tính toán số ngày không hút thuốc
+        LocalDate today = LocalDate.now();
+        long daysBetween = ChronoUnit.DAYS.between(user.getQuitStartDate(), today);
+
+        return Optional.of(daysBetween);
+    }
+
+    /**
+     * Tính toán số tiền tiềm năng đã tiết kiệm dựa trên số ngày không hút thuốc.
+     *
+     * @param user Đối tượng người dùng
+     * @return Optional chứa số tiền đã tiết kiệm, hoặc rỗng nếu thiếu dữ liệu tính toán.
+     */
+    public Optional<Double> calculatePotentialMoneySaved(User user) {
+        if (user.getCigarettesPerDay() == null || user.getCigarettesPerDay() <= 0 ||
+            user.getCostPerPack() == null || user.getCostPerPack() <= 0 ||
+            user.getQuitStartDate() == null) {
+            return Optional.empty(); // Thiếu dữ liệu để tính toán
+        }
+
+        Optional<Long> smokeFreeDaysOptional = getSmokeFreeDays(user);
+        if (smokeFreeDaysOptional.isEmpty() || smokeFreeDaysOptional.get() <= 0) {
+            return Optional.of(0.0); // Không không hút thuốc hoặc ngày cai không được đặt đúng/tái nghiện
+        }
+
+        long smokeFreeDays = smokeFreeDaysOptional.get();
+        if (smokeFreeDays == 0) return Optional.of(0.0); // Nếu họ tái nghiện ngay hôm nay
+
+        // Giả sử 20 điếu thuốc trong một gói để tính toán
+        double costPerCigaretteBeforeQuit = user.getCostPerPack() / 20.0;
+        double dailyCostBeforeQuit = costPerCigaretteBeforeQuit * user.getCigarettesPerDay();
+
+        double totalMoneySaved = dailyCostBeforeQuit * smokeFreeDays;
+        return Optional.of(totalMoneySaved);
     }
 }

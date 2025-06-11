@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lập Kế Hoạch Cai Thuốc</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .quit-plan-container { background-color: #fff; padding: 25px 35px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); width: 500px; text-align: center; }
+        .quit-plan-container h2 { margin-bottom: 25px; color: #333; }
+        .quit-plan-container label { display: block; text-align: left; margin-bottom: 5px; color: #555; font-weight: bold; }
+        .quit-plan-container textarea, .quit-plan-container input, .quit-plan-container select {
+            width: calc(100% - 22px); padding: 10px; margin-bottom: 18px; border: 1px solid #ddd;
+            border-radius: 4px; font-size: 1em; box-sizing: border-box; }
+        .quit-plan-container textarea { min-height: 120px; resize: vertical; }
+        .quit-plan-container input[type="checkbox"] { width: auto; margin-right: 10px; }
+        .quit-plan-container button { width: 100%; padding: 12px; background-color: #007bff; color: white;
+            border: none; border-radius: 4px; cursor: pointer; font-size: 1.1em; }
+        .quit-plan-container button:hover { background-color: #0056b3; }
+        .message { margin-bottom: 15px; font-size: 0.9em; }
+        .success-message { color: green; }
+        .error-message { color: red; }
+        .back-link { margin-top: 20px; font-size: 14px; }
+        .back-link a { color: #007bff; text-decoration: none; }
+        .back-link a:hover { text-decoration: underline; }
+        .phase-group { margin-bottom: 18px; }
+        .phase-group label { display: flex; align-items: center; margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+    <div class="quit-plan-container">
+        <h2>Lập Kế Hoạch Cai Thuốc</h2>
+
+        <div th:if="${message}" class="message" th:class="${success} ? 'success-message' : 'error-message'" th:text="${message}"></div>
+
+        <form th:action="@{/smoking/quit-plan}" th:object="${quitPlan}" method="post">
+            <input type="hidden" name="userId" th:value="${userId}">
+
+            <div>
+                <label for="reason">Lý do cai thuốc:</label>
+                <textarea id="reason" th:field="*{reason}" required placeholder="Ví dụ: Cải thiện sức khỏe, tiết kiệm tiền"></textarea>
+            </div>
+
+            <div>
+                <label for="startDate">Ngày bắt đầu:</label>
+                <input type="datetime-local" id="startDate" th:field="*{startDate}" required>
+            </div>
+
+            <div>
+                <label for="endDate">Ngày kết thúc (tùy chọn):</label>
+                <input type="datetime-local" id="endDate" th:field="*{endDate}">
+            </div>
+
+            <div class="phase-group">
+                <label>Các giai đoạn:</label>
+                <div th:each="phase, iterStat : ${suggestedPhases}">
+                    <label>
+                        <input type="checkbox" th:id="'phase' + ${iterStat.index}"
+                               th:name="'phases[' + ${iterStat.index} + ']'"
+                               th:value="${phase}">
+                        <span th:text="${phase}"></span>
+                    </label>
+                </div>
+                <textarea id="customPhases" name="phases" placeholder="Thêm giai đoạn tùy chỉnh (mỗi dòng một giai đoạn)"></textarea>
+            </div>
+
+            <div>
+                <label for="status">Trạng thái:</label>
+                <select id="status" th:field="*{status}">
+                    <option th:each="status : ${statuses}" th:value="${status}" th:text="${status}"></option>
+                </select>
+            </div>
+
+            <div>
+                <button type="submit">Lưu Kế Hoạch</button>
+            </div>
+        </form>
+
+        <div class="back-link">
+            <a th:href="@{/dashboard}">Quay lại Dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

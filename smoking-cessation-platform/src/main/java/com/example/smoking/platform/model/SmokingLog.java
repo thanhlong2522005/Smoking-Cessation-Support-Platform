@@ -38,9 +38,9 @@ public class SmokingLog {
     @Enumerated(EnumType.STRING)
     private Frequency frequency;
 
-    // Enum cho tần suất
-    public enum Frequency {
-        DAILY, OCCASIONAL, WEEKLY
+    @Transient
+    public String getFrequencyDisplayName() {
+        return frequency != null ? frequency.getDisplayName() : null;
     }
 
     public SmokingLog(User user, LocalDateTime date, int cigarettesSmoked, double costPerCigarette, Frequency frequency) {
@@ -49,5 +49,21 @@ public class SmokingLog {
         this.cigarettesSmoked = cigarettesSmoked;
         this.costPerCigarette = costPerCigarette;
         this.frequency = frequency;
+    }
+
+    public enum Frequency {
+        DAILY("Hằng ngày"),
+        OCCASIONAL("Thỉnh thoảng"),
+        WEEKLY("Hằng tuần");
+
+        private final String displayName;
+
+        Frequency(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
     }
 }

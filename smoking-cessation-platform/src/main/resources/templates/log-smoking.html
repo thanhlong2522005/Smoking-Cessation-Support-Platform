@@ -1,35 +1,36 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Log Smoking</title>
+    <title>Ghi nhận hút thuốc</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
     <div class="container mt-5">
-        <h2>Log Smoking Activity</h2>
+        <h2>Ghi nhận hoạt động hút thuốc</h2>
+        <div th:if="${message}" th:class="${success} ? 'alert alert-success' : 'alert alert-danger'" th:text="${message}"></div>
         <form id="smokingForm">
             <div class="mb-3">
-                <label for="userId" class="form-label">User ID</label>
+                <label for="userId" class="form-label">ID Người dùng</label>
                 <input type="number" class="form-control" id="userId" name="userId" th:value="${userId}" readonly>
             </div>
             <div class="mb-3">
-                <label for="cigarettesSmoked" class="form-label">Number of Cigarettes</label>
-                <input type="number" class="form-control" id="cigarettesSmoked" name="cigarettesSmoked" min="0" required>
+                <label for="cigarettesSmoked" class="form-label">Số điếu thuốc</label>
+                <input type="number" class="form-control" id="cigarettesSmoked" name="cigarettesSmoked" min="1" required>
             </div>
             <div class="mb-3">
-                <label for="costPerCigarette" class="form-label">Cost per Cigarette (USD)</label>
-                <input type="number" step="0.01" class="form-control" id="costPerCigarette" name="costPerCigarette" min="0" required>
+                <label for="costPerCigarette" class="form-label">Giá mỗi điếu (USD)</label>
+                <input type="number" step="0.01" class="form-control" id="costPerCigarette" name="costPerCigarette" min="0.01" required>
             </div>
             <div class="mb-3">
-                <label for="frequency" class="form-label">Frequency</label>
-                <select class="form-control" id="frequency" name="frequency">
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
+                <label for="frequency" class="form-label">Tần suất</label>
+                <select class="form-control" id="frequency" name="frequency" required>
+                    <option value="DAILY">Hàng ngày</option>
+                    <option value="OCCASIONAL">Thỉnh thoảng</option>
+                    <option value="WEEKLY">Hàng tuần</option>
                 </select>
             </div>
-            <button type="submit" class="btn btn-primary">Submit</button>
+            <button type="submit" class="btn btn-primary">Gửi</button>
         </form>
         <div id="response" class="mt-3"></div>
     </div>
@@ -38,58 +39,60 @@
         document.getElementById('smokingForm').addEventListener('submit', async (event) => {
             event.preventDefault();
 
+            const userId = document.getElementById('userId').value;
             const cigarettesSmoked = parseInt(document.getElementById('cigarettesSmoked').value);
             const costPerCigarette = parseFloat(document.getElementById('costPerCigarette').value);
+            const frequency = document.getElementById('frequency').value;
 
-            if (cigarettesSmoked < 0 || costPerCigarette < 0) {
-                document.getElementById('response').innerHTML = `<div class="alert alert-danger">Number of cigarettes and cost must be non-negative.</div>`;
+            // Xác thực phía client
+            if (cigarettesSmoked <= 0) {
+                document.getElementById('response').innerHTML = `<div class="alert alert-danger">Số điếu thuốc phải lớn hơn 0.</div>`;
+                return;
+            }
+            if (costPerCigarette <= 0) {
+                document.getElementById('response').innerHTML = `<div class="alert alert-danger">Giá mỗi điếu phải lớn hơn 0.</div>`;
+                return;
+            }
+            if (!['DAILY', 'OCCASIONAL', 'WEEKLY'].includes(frequency)) {
+                document.getElementById('response').innerHTML = `<div class="alert alert-danger">Tần suất không hợp lệ.</div>`;
                 return;
             }
 
             const formData = {
-                // Thay đổi: Thay vì gửi object { id: userId }, chỉ gửi userId trực tiếp.
-                // Hoặc nếu SmokingLog entity của bạn có @ManyToOne User user; thì để nguyên user: { id: userId }
-                // Nhưng nếu controller nhận @RequestBody SmokingLog thì formData này phải khớp với cấu trúc entity SmokingLog
-                // Giả sử SmokingLog entity của bạn có một trường 'userId' (Long) hoặc một trường 'user' (User object)
-                // Tôi sẽ giả định bạn có 'user' object với 'id' bên trong như bạn đang gửi.
-                user: { id: document.getElementById('userId').value },
                 cigarettesSmoked: cigarettesSmoked,
                 costPerCigarette: costPerCigarette,
-                frequency: document.getElementById('frequency').value
-                // Thêm trường logDate nếu entity SmokingLog có nó (rất nên có)
-                // logDate: new Date().toISOString() // Hoặc lấy từ input nếu bạn có
+                frequency: frequency
+                // Không cần gửi date vì backend sẽ đặt LocalDateTime.now()
             };
 
-            console.log('Sending data:', formData); // Debug: Kiểm tra dữ liệu gửi đi
+            console.log('Sending data:', formData);
 
             try {
-                const response = await fetch('/api/smoking/log', {
+                const response = await fetch(`/api/smoking/log?userId=${userId}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData)
                 });
 
-                const text = await response.text(); // Lấy raw response trước
-                console.log('Raw response:', text); // Debug: Xem phản hồi thực tế
+                const text = await response.text();
+                console.log('Raw response:', text);
 
                 if (!response.ok) {
-                    let errorMessage = 'Failed to log smoking data';
+                    let errorMessage = 'Không thể ghi nhận dữ liệu hút thuốc';
                     try {
-                        const errorData = JSON.parse(text); // Thử parse nếu là JSON
+                        const errorData = JSON.parse(text);
                         errorMessage = errorData.message || errorMessage;
                     } catch (e) {
-                        // Nếu không phải JSON, dùng raw text
-                        errorMessage = `Server Error: ${text}`;
+                        errorMessage = `Lỗi server: ${text}`;
                     }
                     throw new Error(errorMessage);
                 }
 
                 const result = JSON.parse(text);
                 document.getElementById('response').innerHTML = `<div class="alert alert-success">${result.message || 'Dữ liệu đã được lưu thành công!'}</div>`;
-                // Tùy chọn: Xóa form sau khi gửi thành công
                 document.getElementById('smokingForm').reset();
             } catch (error) {
-                document.getElementById('response').innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+                document.getElementById('response').innerHTML = `<div class="alert alert-danger">Lỗi: ${error.message}</div>`;
             }
         });
     </script>

@@ -3,7 +3,9 @@ import com.example.smoking.platform.model.SmokingLog;
 import com.example.smoking.platform.model.User;
 import com.example.smoking.platform.repository.SmokingLogRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -19,6 +21,10 @@ public class SmokingLogService {
 
     @Autowired
     private SmokingLogRepository smokingLogRepository;
+
+    @Autowired
+    @Lazy // Sử dụng @Lazy để tránh lỗi Circular Dependency
+    private AchievementService achievementService;
 
     public SmokingLog save(SmokingLog smokingLog) {
         // Kiểm tra dữ liệu đầu vào
@@ -36,8 +42,16 @@ public class SmokingLogService {
         }
 
         // Đặt thời gian hiện tại
-        smokingLog.setDate(LocalDateTime.now()); // 03:28 PM +07, 06/06/2025
-        return smokingLogRepository.save(smokingLog);
+        if (smokingLog.getDate() == null) {
+            smokingLog.setDate(LocalDateTime.now());
+        }
+
+        SmokingLog savedLog = smokingLogRepository.save(smokingLog);
+
+        // Sau khi lưu nhật ký, kiểm tra và cập nhật huy hiệu cho người dùng
+        achievementService.evaluateAndAwardAchievements(savedLog.getUser());
+
+        return savedLog;
     }
 
     public List<SmokingLog> getLogsByUser(User user) {
@@ -123,25 +137,43 @@ public class SmokingLogService {
      * hoặc 0L nếu người dùng đã hút thuốc trở lại sau ngày cai.
      */
     public Optional<Long> getSmokeFreeDays(User user) {
-        if (user.getQuitStartDate() == null) {
-            return Optional.empty(); // Không có ngày bắt đầu cai thuốc được đặt
+        if (user == null || user.getQuitStartDate() == null) {
+            return Optional.empty();
         }
 
-        // Kiểm tra xem có bất kỳ nhật ký hút thuốc nào tồn tại SAU ngày QuitStartDate hay không
-        // Điều này rất quan trọng để đảm bảo người dùng thực sự "không hút thuốc" kể từ ngày đó
-        List<SmokingLog> logsAfterQuitDate = smokingLogRepository.findByUserAndDateAfter(user, user.getQuitStartDate().atStartOfDay());
-
-        if (!logsAfterQuitDate.isEmpty()) {
-            // Người dùng đã hút thuốc kể từ ngày cai thuốc đã khai báo, vậy họ không còn không hút thuốc
-            return Optional.of(0L); // Chỉ ra rằng họ không còn không hút thuốc (hoặc đã tái nghiện)
-        }
-
-        // Nếu không có nhật ký nào sau ngày cai, tính toán số ngày không hút thuốc
+        LocalDate quitStartDate = user.getQuitStartDate();
         LocalDate today = LocalDate.now();
-        long daysBetween = ChronoUnit.DAYS.between(user.getQuitStartDate(), today);
+
+        // Tìm ngày cuối cùng người dùng ghi nhận hút thuốc (từ log)
+        // Nếu có log hút thuốc sau quitStartDate, thì ngày bắt đầu tính không hút thuốc sẽ là sau ngày đó.
+        Optional<SmokingLog> latestSmokingLogOptional = smokingLogRepository.findTopByUserOrderByDateDesc(user);
+        LocalDate lastSmokingDate = null;
+        if (latestSmokingLogOptional.isPresent()) {
+            SmokingLog latestLog = latestSmokingLogOptional.get();
+            if (latestLog.getCigarettesSmoked() > 0) {
+                lastSmokingDate = latestLog.getDate().toLocalDate();
+            }
+        }
+
+        LocalDate effectiveQuitStartDate;
+        if (lastSmokingDate != null && lastSmokingDate.isAfter(quitStartDate)) {
+            // Nếu có log hút thuốc sau ngày bắt đầu cai, thì ngày bắt đầu tính không hút thuốc là sau ngày log đó
+            effectiveQuitStartDate = lastSmokingDate.plusDays(1);
+        } else {
+            // Ngược lại, tính từ ngày bắt đầu cai đã đặt
+            effectiveQuitStartDate = quitStartDate;
+        }
+
+        // Nếu ngày bắt đầu có hiệu lực lớn hơn ngày hiện tại, nghĩa là chưa đạt được ngày không hút thuốc nào.
+        if (effectiveQuitStartDate.isAfter(today)) {
+            return Optional.of(0L);
+        }
+
+        long daysBetween = ChronoUnit.DAYS.between(effectiveQuitStartDate, today);
 
         return Optional.of(daysBetween);
     }
+
 
     /**
      * Tính toán số tiền tiềm năng đã tiết kiệm dựa trên số ngày không hút thuốc.
@@ -158,7 +190,7 @@ public class SmokingLogService {
 
         Optional<Long> smokeFreeDaysOptional = getSmokeFreeDays(user);
         if (smokeFreeDaysOptional.isEmpty() || smokeFreeDaysOptional.get() <= 0) {
-            return Optional.of(0.0); // Không không hút thuốc hoặc ngày cai không được đặt đúng/tái nghiện
+            return Optional.of(0.0); // Không có ngày hút thuốc hoặc ngày cai không được đặt đúng/tái nghiện
         }
 
         long smokeFreeDays = smokeFreeDaysOptional.get();

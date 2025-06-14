@@ -20,7 +20,7 @@ public class UserAchievement {
     @JoinColumn(name = "user_id", nullable = false)
     private User user; // Người dùng đạt được huy hiệu
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "achievement_id", nullable = false)
     private Achievement achievement; // Huy hiệu đã đạt được
 

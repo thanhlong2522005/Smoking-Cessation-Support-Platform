@@ -321,6 +321,7 @@
 
     <script th:inline="javascript">
         /*<![CDATA[*/
+        // Dữ liệu được truyền từ backend
         const successMessage = /*[[${successMessage}]]*/ null;
         const errorMessage = /*[[${errorMessage}]]*/ null;
         const latestSmokingLog = /*[[${latestSmokingLog}]]*/ null;
@@ -340,28 +341,25 @@
             `;
             alertContainer.appendChild(alertDiv);
 
-            // Show the alert
             setTimeout(() => {
                 alertDiv.classList.add('show');
-            }, 100); // Small delay to allow CSS transition
+            }, 100);
 
-            // Auto-hide
-            if (duration > 0) {
-                setTimeout(() => {
-                    alertDiv.classList.remove('show');
-                    alertDiv.addEventListener('transitionend', () => alertDiv.remove());
-                }, duration);
-            }
+            const timeoutId = setTimeout(() => {
+                alertDiv.classList.remove('show');
+                alertDiv.addEventListener('transitionend', () => alertDiv.remove());
+            }, duration);
 
-            // Close button functionality
             alertDiv.querySelector('.close-btn').addEventListener('click', () => {
+                clearTimeout(timeoutId);
                 alertDiv.classList.remove('show');
                 alertDiv.addEventListener('transitionend', () => alertDiv.remove());
             });
         }
 
-        // Logic hiển thị thông báo
+        // Logic hiển thị thông báo theo thứ tự ưu tiên
         document.addEventListener('DOMContentLoaded', () => {
+            // Các thông báo chung từ redirect luôn được hiển thị
             if (successMessage) {
                 showAlert(successMessage, 'success');
             }
@@ -369,41 +367,39 @@
                 showAlert(errorMessage, 'error');
             }
 
-            // Thông báo về số ngày không hút thuốc và tiền tiết kiệm
-            if (smokeFreeDays > 0) {
-                showAlert(`Chúc mừng! Bạn đã không hút thuốc được ${smokeFreeDays} ngày và tiết kiệm được ${potentialMoneySaved.toLocaleString('vi-VN')} VND!`, 'success');
-            } else if (smokeFreeDays === 0 && latestSmokingLog) {
-                 // Nếu smokeFreeDays là 0 và có log hút thuốc gần nhất, có thể người dùng vừa tái nghiện
-                 const lastSmokeDate = new Date(latestSmokingLog.date);
-                 const now = new Date();
-                 // Kiểm tra nếu log gần nhất là trong hôm nay hoặc hôm qua
-                 const diffTime = Math.abs(now - lastSmokeDate);
-                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            let priorityAlertShown = false;
 
-                 if (diffDays <= 1) { // Nếu log là hôm nay hoặc hôm qua
-                     showAlert(`Bạn đã ghi nhận hút thuốc vào ngày ${lastSmokeDate.toLocaleString('vi-VN')}. Đừng nản lòng, hãy bắt đầu lại ngay hôm nay!`, 'warning', 10000);
-                 } else {
-                     // Nếu không có smokeFreeDays và log cuối cùng đã lâu, có thể họ chưa thiết lập thông tin cai thuốc hoặc đã ngừng sử dụng tính năng
-                     // Hoặc có thể họ đã hút thuốc gần đây nhưng chưa đạt được ngày cai thuốc đáng kể
-                     showAlert(`Hãy tiếp tục hành trình cai thuốc của bạn! Lần cuối bạn hút thuốc là vào ngày ${lastSmokeDate.toLocaleString('vi-VN')}.`, 'info', 10000);
-                 }
-            } else if (smokeFreeDays === 0 && !latestSmokingLog && potentialMoneySaved === 0) {
-                // Nếu không có dữ liệu nào liên quan đến cai thuốc hoặc ghi nhận hút thuốc
-                showAlert('Chào mừng bạn đến với dashboard! Hãy cập nhật hồ sơ và ghi nhận hoạt động hút thuốc để bắt đầu hành trình cai thuốc của bạn!', 'info', 10000);
-            }
-
-
-            // Thông báo huy hiệu mới
+            // 1. Ưu tiên kiểm tra và thông báo huy hiệu mới
+            // Giả định `userAchievements` đã được sắp xếp theo ngày nhận tăng dần từ backend
             if (userAchievements && userAchievements.length > 0) {
-                // Giả định rằng huy hiệu mới nhất là cái cuối cùng trong danh sách (nếu sắp xếp theo dateAchieved DESC)
-                // Hiện tại, ta sẽ thông báo tất cả các huy hiệu đã đạt được (hoặc lọc ra những cái mới nhất nếu cần)
-                userAchievements.forEach(ua => {
-                    const achievementName = ua.achievement.name;
-                    showAlert(`Bạn đã đạt được thành tích: "${achievementName}"!`, 'success', 7000);
-                });
+                const newestAchievement = userAchievements[userAchievements.length - 1];
+                const achievementDate = new Date(newestAchievement.dateAchieved);
+                const now = new Date();
+                
+                const diffHours = Math.abs(now - achievementDate) / 36e5; // 36e5 = 1000 * 60 * 60
+
+                // Nếu huy hiệu được trao trong vòng 24 giờ qua, hiển thị thông báo
+                if (diffHours < 24) {
+                    const achievementName = newestAchievement.achievement.name;
+                    showAlert(`🎖️ Chúc mừng! Bạn vừa đạt được huy hiệu mới: "${achievementName}"!`, 'success', 8000);
+                    priorityAlertShown = true; // Đánh dấu đã hiển thị thông báo ưu tiên
+                }
             }
 
+            // 2. Nếu không có thông báo huy hiệu mới, hiển thị các thông báo khác
+            if (!priorityAlertShown) {
+                if (smokeFreeDays > 0) {
+                    showAlert(`🎉 Bạn đã không hút thuốc được ${smokeFreeDays} ngày và tiết kiệm được ${potentialMoneySaved.toLocaleString('vi-VN')} VND!`, 'info');
+                
+                } else if (smokeFreeDays === 0 && latestSmokingLog) {
+                    const lastSmokeDate = new Date(latestSmokingLog.date);
+                    showAlert(`Bạn đã ghi nhận hút thuốc gần đây. Đừng nản lòng, hãy bắt đầu lại ngay hôm nay!`, 'warning', 10000);
+
+                } else if (smokeFreeDays === 0 && !latestSmokingLog && potentialMoneySaved === 0) {
+                    showAlert('Chào mừng bạn! Hãy cập nhật hồ sơ và ghi nhận hoạt động hút thuốc để bắt đầu hành trình của bạn!', 'info', 10000);
+                }
+            }
         });
-    </script>
+</script>
 </body>
 </html>

@@ -82,40 +82,6 @@ public class AdminController {
         return "redirect:/admin/dashboard"; // Quay lại dashboard
     }
 
-    @PostMapping("/achievements/grant")
-    public String grantAchievementToUser(@RequestParam Long userId,
-                                         @RequestParam Long achievementId,
-                                         RedirectAttributes redirectAttributes) {
-        try {
-            Optional<User> userOptional = userService.getUserById(userId);
-            Optional<Achievement> achievementOptional = achievementService.getAchievementById(achievementId);
-
-            if (userOptional.isEmpty()) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy người dùng với ID: " + userId);
-                return "redirect:/admin/dashboard";
-            }
-            if (achievementOptional.isEmpty()) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy huy hiệu với ID: " + achievementId);
-                return "redirect:/admin/dashboard";
-            }
-
-            User user = userOptional.get();
-            Achievement achievement = achievementOptional.get();
-
-            String errorMessage = achievementService.grantAchievementToUser(user, achievement); // <-- Gán kết quả vào String
-
-            if (errorMessage != null) { // Nếu có lỗi (errorMessage không null)
-                redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
-            } else { // Nếu thành công (errorMessage là null)
-                redirectAttributes.addFlashAttribute("successMessage", "Đã gán huy hiệu '" + achievement.getName() + "' cho người dùng '" + user.getUsername() + "' thành công!");
-            }
-
-        } catch (Exception e) { // Bắt các ngoại lệ khác nếu có
-            redirectAttributes.addFlashAttribute("errorMessage", "Đã xảy ra lỗi khi gán huy hiệu: " + e.getMessage());
-        }
-        return "redirect:/admin/dashboard";
-    }
-
 
     // Xóa huy hiệu
     @GetMapping("/achievements/delete/{id}") // Dùng GetMapping cho đơn giản

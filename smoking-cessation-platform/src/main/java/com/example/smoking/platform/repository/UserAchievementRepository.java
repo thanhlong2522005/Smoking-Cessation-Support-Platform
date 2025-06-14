@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @Repository
 public interface UserAchievementRepository extends JpaRepository<UserAchievement, Long> {
-    List<UserAchievement> findByUser(User user); // Lấy tất cả huy hiệu của một user
+    List<UserAchievement> findByUserOrderByDateAchievedAsc(User user); // Lấy tất cả huy hiệu của một user, đã sắp xếp
     List<UserAchievement> findByAchievement(Achievement achievement);
     Optional<UserAchievement> findByUserAndAchievement(User user, Achievement achievement); // Kiểm tra xem user đã đạt huy hiệu này chưa
     void deleteByAchievement(Achievement achievement);

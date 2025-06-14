@@ -131,15 +131,8 @@
                     <td th:text="${achievement.description}"></td>
                     <td><img th:src="${achievement.iconUrl}" alt="Icon" style="width: 30px; height: 30px; vertical-align: middle;"></td>
                     <td>
-                        <form th:action="@{/admin/achievements/grant}" method="post" class="grant-form">
-                            <input type="hidden" name="achievementId" th:value="${achievement.id}">
-                            <select name="userId" required>
-                                <option value="">Chọn thành viên</option>
-                                <option th:each="member : ${members}" th:value="${member.id}" th:text="${member.username}"></option>
-                            </select>
-                            <button type="submit">Gán huy hiệu</button>
-                        </form>
-                        <a th:href="@{/admin/achievements/delete/{id}(id=${achievement.id})}" style="color: red; text-decoration: none; margin-left: 10px;">Xóa</a>
+                        <a th:href="@{/admin/achievements/delete/{id}(id=${achievement.id})}" 
+                        style="color: red; text-decoration: none;">Xóa</a>
                     </td>
                 </tr>
             </tbody>

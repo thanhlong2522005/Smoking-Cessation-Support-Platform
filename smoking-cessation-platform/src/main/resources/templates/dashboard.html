@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Người Dùng</title>
-    <style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <style>
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f7f6;
@@ -252,6 +252,17 @@
             color: #333;
         }
 
+        /* Chart Styles */
+        .chart-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border: 1px solid #e2e6ea;
+            border-radius: 8px;
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+        }
     </style>
 </head>
 <body>
@@ -285,7 +296,7 @@
             </div>
             <div class="card">
                 <h3>Tiền tiết kiệm được</h3>
-                <p>Bạn đã tiết kiệm được <span class="highlight" th:text="${#numbers.formatDecimal(potentialMoneySaved, 0, 'COMMA', 0, 'POINT')} + ' VND'">0 VND</span>.</p>
+                <p>Bạn đã tiết kiệm được <span class="highlight" th:text="${#numbers.formatDecimal(moneySaved, 0, 'COMMA', 0, 'POINT')} + ' VND'">0 VND</span>.</p>
             </div>
             <div class="card">
                 <h3>Lần hút thuốc gần nhất</h3>
@@ -297,6 +308,16 @@
                     Bạn chưa ghi nhận lần hút thuốc nào.
                 </p>
             </div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Số điếu thuốc hút hàng tuần</h2>
+            <canvas id="weeklySmokingChart"></canvas>
+        </div>
+
+        <div class="chart-container">
+            <h2>Tiền tiết kiệm tích lũy</h2>
+            <canvas id="cumulativeMoneySavedChart"></canvas>
         </div>
 
         <div class="achievements-section">
@@ -326,8 +347,10 @@
         const errorMessage = /*[[${errorMessage}]]*/ null;
         const latestSmokingLog = /*[[${latestSmokingLog}]]*/ null;
         const smokeFreeDays = /*[[${smokeFreeDays}]]*/ 0;
-        const potentialMoneySaved = /*[[${potentialMoneySaved}]]*/ 0.0;
+        const moneySaved = /*[[${moneySaved}]]*/ 0.0; // Đã đổi tên
         const userAchievements = /*[[${userAchievements}]]*/ [];
+        const userId = /*[[${userId}]]*/ null; // Lấy userId để gọi API
+
         /*]]>*/
 
         const alertContainer = document.getElementById('alertContainer');
@@ -357,9 +380,8 @@
             });
         }
 
-        // Logic hiển thị thông báo theo thứ tự ưu tiên
         document.addEventListener('DOMContentLoaded', () => {
-            // Các thông báo chung từ redirect luôn được hiển thị
+            // Hiển thị các thông báo từ redirect (nếu có)
             if (successMessage) {
                 showAlert(successMessage, 'success');
             }
@@ -367,39 +389,157 @@
                 showAlert(errorMessage, 'error');
             }
 
+            // Logic hiển thị thông báo ưu tiên
             let priorityAlertShown = false;
 
             // 1. Ưu tiên kiểm tra và thông báo huy hiệu mới
-            // Giả định `userAchievements` đã được sắp xếp theo ngày nhận tăng dần từ backend
             if (userAchievements && userAchievements.length > 0) {
                 const newestAchievement = userAchievements[userAchievements.length - 1];
                 const achievementDate = new Date(newestAchievement.dateAchieved);
                 const now = new Date();
                 
-                const diffHours = Math.abs(now - achievementDate) / 36e5; // 36e5 = 1000 * 60 * 60
-
-                // Nếu huy hiệu được trao trong vòng 24 giờ qua, hiển thị thông báo
-                if (diffHours < 24) {
+                // Kiểm tra nếu huy hiệu được trao trong vòng 24 giờ qua (hoặc một khoảng thời gian hợp lý)
+                // Cần đảm bảo rằng dateAchieved từ backend không phải là một chuỗi rỗng hoặc null.
+                if (newestAchievement.dateAchieved && Math.abs(now - achievementDate) / 36e5 < 24) { // 36e5 = 1000 * 60 * 60
                     const achievementName = newestAchievement.achievement.name;
                     showAlert(`🎖️ Chúc mừng! Bạn vừa đạt được huy hiệu mới: "${achievementName}"!`, 'success', 8000);
-                    priorityAlertShown = true; // Đánh dấu đã hiển thị thông báo ưu tiên
+                    priorityAlertShown = true;
                 }
             }
 
             // 2. Nếu không có thông báo huy hiệu mới, hiển thị các thông báo khác
             if (!priorityAlertShown) {
                 if (smokeFreeDays > 0) {
-                    showAlert(`🎉 Bạn đã không hút thuốc được ${smokeFreeDays} ngày và tiết kiệm được ${potentialMoneySaved.toLocaleString('vi-VN')} VND!`, 'info');
-                
-                } else if (smokeFreeDays === 0 && latestSmokingLog) {
-                    const lastSmokeDate = new Date(latestSmokingLog.date);
+                    showAlert(`🎉 Bạn đã không hút thuốc được ${smokeFreeDays} ngày và tiết kiệm được ${moneySaved.toLocaleString('vi-VN')} VND!`, 'info');
+                } else if (smokeFreeDays === 0 && latestSmokingLog && latestSmokingLog.cigarettesSmoked > 0) {
+                    // Nếu ngày không hút thuốc là 0 và có log hút thuốc gần đây
                     showAlert(`Bạn đã ghi nhận hút thuốc gần đây. Đừng nản lòng, hãy bắt đầu lại ngay hôm nay!`, 'warning', 10000);
-
-                } else if (smokeFreeDays === 0 && !latestSmokingLog && potentialMoneySaved === 0) {
+                } else if (smokeFreeDays === 0 && !latestSmokingLog && moneySaved === 0) {
+                    // Nếu chưa có log nào và chưa tiết kiệm được tiền
                     showAlert('Chào mừng bạn! Hãy cập nhật hồ sơ và ghi nhận hoạt động hút thuốc để bắt đầu hành trình của bạn!', 'info', 10000);
                 }
             }
+
+            // --- Fetch và Vẽ biểu đồ ---
+            if (userId) { // Đảm bảo userId tồn tại trước khi gọi API
+                // Biểu đồ số điếu thuốc hút hàng tuần
+                fetch(`/api/smoking/stats/weekly-chart-data?userId=${userId}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok ' + response.statusText);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        const ctx = document.getElementById('weeklySmokingChart').getContext('2d');
+                        new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: data.labels,
+                                datasets: [{
+                                    label: data.title,
+                                    data: data.data,
+                                    backgroundColor: 'rgba(0, 123, 255, 0.7)',
+                                    borderColor: 'rgba(0, 123, 255, 1)',
+                                    borderWidth: 1
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                plugins: {
+                                    title: {
+                                        display: true,
+                                        text: data.title
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        title: {
+                                            display: true,
+                                            text: 'Số điếu'
+                                        }
+                                    },
+                                    x: {
+                                        title: {
+                                            display: true,
+                                            text: 'Tuần'
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error fetching weekly smoking stats:', error);
+                        showAlert('Không thể tải dữ liệu biểu đồ tuần.', 'error');
+                    });
+
+                // Biểu đồ tiền tiết kiệm tích lũy
+                fetch(`/api/smoking/stats/money-saved-chart-data?userId=${userId}&daysToLookBack=90`) // Lấy 90 ngày gần nhất
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok ' + response.statusText);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        const ctx = document.getElementById('cumulativeMoneySavedChart').getContext('2d');
+                        new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: data.labels,
+                                datasets: [{
+                                    label: data.title,
+                                    data: data.data,
+                                    backgroundColor: 'rgba(40, 167, 69, 0.2)', // Light green fill
+                                    borderColor: 'rgba(40, 167, 69, 1)',
+                                    borderWidth: 2,
+                                    fill: true,
+                                    tension: 0.1
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                plugins: {
+                                    title: {
+                                        display: true,
+                                        text: data.title
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        title: {
+                                            display: true,
+                                            text: 'Số tiền (VND)'
+                                        }
+                                    },
+                                    x: {
+                                        title: {
+                                            display: true,
+                                            text: 'Ngày'
+                                        },
+                                        // Cải thiện hiển thị nhãn ngày nếu quá nhiều
+                                        ticks: {
+                                            autoSkip: true,
+                                            maxTicksLimit: 10 // Giới hạn số lượng nhãn trên trục X
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error fetching cumulative money saved stats:', error);
+                        showAlert('Không thể tải dữ liệu biểu đồ tiền tiết kiệm.', 'error');
+                    });
+
+            } else {
+                console.error("User ID not available for API calls.");
+                showAlert('Không thể tải dữ liệu biểu đồ. Vui lòng đăng nhập lại.', 'error');
+            }
         });
-</script>
+    </script>
 </body>
 </html>

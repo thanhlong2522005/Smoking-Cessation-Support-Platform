@@ -35,4 +35,12 @@ public interface SmokingLogRepository extends JpaRepository<SmokingLog, Long> {
 
     // Phương thức mới: Tìm tất cả nhật ký hút thuốc của người dùng sau một ngày cụ thể
     List<SmokingLog> findByUserAndDateAfter(User user, LocalDateTime date);
+
+    List<SmokingLog> findByUserAndDateBetweenOrderByDateDesc(User user, LocalDateTime startDate, LocalDateTime endDate);
+
+    List<SmokingLog> findByUserOrderByDateDesc(User user);
+
+    List<SmokingLog> findByUserAndDateAfterOrderByDateAsc(User user, LocalDateTime date);
+
+    
 }

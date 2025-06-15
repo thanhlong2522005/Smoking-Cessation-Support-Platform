@@ -39,31 +39,36 @@ public class HomeController {
     }
 
     @GetMapping("/dashboard")
-    public String dashboard(Model model) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String currentUsername = authentication.getName();
+public String dashboard(Model model) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    String currentUsername = authentication.getName();
 
-        Optional<User> currentUserOptional = userService.getUserByUsername(currentUsername);
+    Optional<User> currentUserOptional = userService.getUserByUsername(currentUsername);
 
-        if (currentUserOptional.isEmpty()) {
-        } else {
-            User currentUser = currentUserOptional.get();
-            model.addAttribute("userAchievements", achievementService.getUserAchievements(currentUser));
+    if (currentUserOptional.isEmpty()) {
+        // Xử lý trường hợp người dùng không tìm thấy (có thể redirect hoặc hiển thị lỗi)
+        // Hiện tại, khối này đang trống, nên nếu không tìm thấy user, các attribute dưới sẽ không được thêm.
+        // Có thể thêm logging hoặc redirect về trang login với thông báo lỗi
+        // return "redirect:/login?error=userNotFound";
+    } else {
+        User currentUser = currentUserOptional.get();
 
-            // Lấy thông tin cho popup thông báo
-            Optional<SmokingLog> latestLogOptional = smokingLogService.findLatestSmokingLogByUser(currentUser);
-            model.addAttribute("latestSmokingLog", latestLogOptional.orElse(null)); // Có thể là null nếu chưa có log nào
+        // THÊM userId vào model để JavaScript có thể sử dụng cho API calls
+        model.addAttribute("userId", currentUser.getId()); // <--- THÊM DÒNG NÀY
 
-            Optional<Long> smokeFreeDays = smokingLogService.getSmokeFreeDays(currentUser);
-            model.addAttribute("smokeFreeDays", smokeFreeDays.orElse(0L)); // 0 nếu không có ngày cai hoặc đã tái nghiện
+        model.addAttribute("userAchievements", achievementService.getUserAchievements(currentUser));
 
-            Optional<Double> potentialMoneySaved = smokingLogService.calculatePotentialMoneySaved(currentUser);
-            model.addAttribute("potentialMoneySaved", potentialMoneySaved.orElse(0.0)); // 0.0 nếu không tính toán được
+        // Lấy thông tin cho popup thông báo và hiển thị trên dashboard
+        Optional<SmokingLog> latestLogOptional = smokingLogService.findLatestSmokingLogByUser(currentUser);
+        model.addAttribute("latestSmokingLog", latestLogOptional.orElse(null));
 
-            // Thêm các thuộc tính người dùng cần thiết cho dashboard nếu chưa có
-            model.addAttribute("user", currentUser);
-        }
-        return "dashboard";
+        // Sử dụng các phương thức tính toán mới nhất và nhất quán với tên biến trong frontend
+        model.addAttribute("smokeFreeDays", (long) smokingLogService.calculateDaysWithoutSmoking(currentUser)); // <--- ĐÃ SỬA
+        model.addAttribute("moneySaved", smokingLogService.calculateMoneySaved(currentUser)); // <--- ĐÃ SỬA VÀ ĐỔI TÊN
+
+        // Thêm các thuộc tính người dùng cần thiết cho dashboard nếu chưa có
+        model.addAttribute("user", currentUser); // Giữ lại nếu các phần khác của dashboard cần đối tượng user
     }
-
+    return "dashboard";
+}
 }

@@ -10,7 +10,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "users") // Tên bảng trong database
+@Table(name = "smoking_db") // Tên bảng trong database
 @Data // Lombok: Tự động tạo getter, setter, toString, equals, hashCode
 @NoArgsConstructor // Lombok: Tự động tạo constructor không tham số
 @AllArgsConstructor // Lombok: Tự động tạo constructor với tất cả các tham số

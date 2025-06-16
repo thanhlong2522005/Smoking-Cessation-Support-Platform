@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Người Dùng</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* ... (CSS của bạn giữ nguyên) ... */
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f7f6;
@@ -252,154 +254,455 @@
             color: #333;
         }
 
+        /* Chart Styles */
+        .chart-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border: 1px solid #e2e6ea;
+            border-radius: 8px;
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        /* BỔ SUNG CSS cho phần sức khỏe */
+        .health-progress-section {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .health-milestones-list {
+            list-style: none;
+            padding: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* 2-3 cột trên màn hình lớn */
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .health-milestone-item {
+            background-color: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            flex-direction: column; /* Đổi thành cột để nội dung rõ ràng hơn */
+        }
+
+        .health-milestone-item.achieved {
+            border-left: 5px solid #28a745; /* Green border for achieved */
+            background-color: #e6ffe6; /* Light green background */
+        }
+
+        .health-milestone-item.pending {
+            border-left: 5px solid #ffc107; /* Yellow/orange border for pending */
+            background-color: #fffacd; /* Light yellow background */
+        }
+
+        .health-milestone-item .icon {
+            font-size: 2.5em; /* Tăng kích thước icon */
+            line-height: 1;
+            color: #6c757d; /* Default icon color */
+            margin-bottom: 10px; /* Thêm khoảng cách dưới icon */
+        }
+
+        .health-milestone-item.achieved .icon {
+            color: #28a745; /* Green for achieved */
+        }
+
+        .health-milestone-item.pending .icon {
+            color: #ffc107; /* Yellow/orange for pending */
+        }
+
+        .health-milestone-item h4 {
+            margin: 0 0 5px 0;
+            font-size: 1.2em; /* Tăng kích thước tiêu đề */
+            color: #0056b3;
+        }
+
+        .health-milestone-item p {
+            margin: 0;
+            font-size: 0.95em; /* Tăng kích thước mô tả */
+            color: #555;
+            line-height: 1.5;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .dashboard-sections, .health-milestones-list, .achievements-grid {
+                grid-template-columns: 1fr; /* Stack columns on smaller screens */
+            }
+            .navbar .nav-links {
+                flex-direction: column;
+                align-items: flex-end;
+            }
+            .navbar .nav-links li {
+                margin: 5px 0;
+            }
+            .alert-popup {
+                width: 90%;
+                left: 5%;
+                transform: translateX(0);
+            }
+        }
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <a th:href="@{/}" class="logo">Quit Smoking</a>
-        <ul class="nav-links">
-            <li><a th:href="@{/dashboard}">Dashboard</a></li>
-            <li><a th:href="@{/user-profile}">Hồ Sơ Của Tôi</a></li>
-            <li><a th:href="@{/smoking/log}">Ghi Nhận Hút Thuốc</a></li>
-            <li><a th:href="@{/smoking/quit-plan}">Lập Kế Hoạch Cai</a></li>
-            <li><a th:href="@{/smoking/quit-plans}">Kế Hoạch Của Tôi</a></li>
-            <li><a th:href="@{/feedback}">Gửi Phản Hồi</a></li>
-            <li sec:authorize="hasRole('ADMIN')"><a th:href="@{/admin/dashboard}">Admin Dashboard</a></li>
-            <li>
-                <form th:action="@{/logout}" method="post" class="logout-form">
-                    <button type="submit">Đăng xuất</button>
-                </form>
-            </li>
-        </ul>
-    </nav>
+<nav class="navbar">
+    <a th:href="@{/}" class="logo">Quit Smoking</a>
+    <ul class="nav-links">
+        <li><a th:href="@{/dashboard}">Dashboard</a></li>
+        <li><a th:href="@{/user-profile}">Hồ Sơ Của Tôi</a></li>
+        <li><a th:href="@{/smoking/log}">Ghi Nhận Hút Thuốc</a></li>
+        <li><a th:href="@{/smoking/quit-plan}">Lập Kế Hoạch Cai</a></li>
+        <li><a th:href="@{/smoking/quit-plans}">Kế Hoạch Của Tôi</a></li>
+        <li><a th:href="@{/feedback}">Gửi Phản Hồi</a></li>
+        <li sec:authorize="hasRole('ADMIN')"><a th:href="@{/admin/dashboard}">Admin Dashboard</a></li>
+        <li>
+            <form th:action="@{/logout}" method="post" class="logout-form">
+                <button type="submit">Đăng xuất</button>
+            </form>
+        </li>
+    </ul>
+</nav>
 
-    <div class="main-content">
-        <h1>Bảng điều khiển của bạn</h1>
+<div class="main-content">
+    <h1>Bảng điều khiển của bạn</h1>
 
-        <div id="alertContainer"></div>
+    <div id="alertContainer"></div>
 
-        <div class="dashboard-sections">
-            <div class="card">
-                <h3>Ngày không hút thuốc</h3>
-                <p>Bạn đã không hút thuốc được <span class="highlight" th:text="${smokeFreeDays}">0</span> ngày.</p>
-            </div>
-            <div class="card">
-                <h3>Tiền tiết kiệm được</h3>
-                <p>Bạn đã tiết kiệm được <span class="highlight" th:text="${#numbers.formatDecimal(potentialMoneySaved, 0, 'COMMA', 0, 'POINT')} + ' VND'">0 VND</span>.</p>
-            </div>
-            <div class="card">
-                <h3>Lần hút thuốc gần nhất</h3>
-                <p th:if="${latestSmokingLog}">
-                    Ngày: <span th:text="${#temporals.format(latestSmokingLog.date, 'dd/MM/yyyy HH:mm')}"></span><br/>
-                    Số điếu: <span th:text="${latestSmokingLog.cigarettesSmoked}"></span> điếu
-                </p>
-                <p th:unless="${latestSmokingLog}">
-                    Bạn chưa ghi nhận lần hút thuốc nào.
-                </p>
-            </div>
+    <div class="dashboard-sections">
+        <div class="card">
+            <h3>Ngày không hút thuốc</h3>
+            <p>Bạn đã không hút thuốc được <span class="highlight" th:text="${smokeFreeDays}">0</span> ngày.</p>
         </div>
-
-        <div class="achievements-section">
-            <h2>Thành tích của bạn</h2>
-            <div th:if="${userAchievements.isEmpty()}">
-                <p>Bạn chưa đạt được thành tích nào. Hãy tiếp tục hành trình cai thuốc để mở khóa các huy hiệu!</p>
-            </div>
-            <div th:unless="${userAchievements.isEmpty()}" class="achievements-grid">
-                <div class="achievement-item" th:each="userAchievement : ${userAchievements}">
-                    <img th:src="${userAchievement.achievement.iconUrl}" alt="Icon" th:title="${userAchievement.achievement.description}">
-                    <h4 th:text="${userAchievement.achievement.name}"></h4>
-                    <p th:text="${#temporals.format(userAchievement.dateAchieved, 'dd/MM/yyyy')}"></p>
-                </div>
-            </div>
+        <div class="card">
+            <h3>Tiền tiết kiệm được</h3>
+            <p>Bạn đã tiết kiệm được <span class="highlight" th:text="${#numbers.formatDecimal(moneySaved, 0, 'COMMA', 0, 'POINT')} + ' VND'">0 VND</span>.</p>
         </div>
-
-        <div class="action-buttons">
-            <a th:href="@{/smoking/log}" class="btn-primary">Ghi nhận hoạt động hút thuốc</a>
-            <a th:href="@{/smoking/quit-plan}" class="btn-secondary">Lập kế hoạch cai thuốc</a>
+        <div class="card">
+            <h3>Lần hút thuốc gần nhất</h3>
+            <p th:if="${latestSmokingLog}">
+                Ngày: <span th:text="${#temporals.format(latestSmokingLog.date, 'dd/MM/yyyy HH:mm')}"></span><br/>
+                Số điếu: <span th:text="${latestSmokingLog.cigarettesSmoked}"></span> điếu
+            </p>
+            <p th:unless="${latestSmokingLog}">
+                Bạn chưa ghi nhận lần hút thuốc nào.
+            </p>
         </div>
     </div>
 
-    <script th:inline="javascript">
-        /*<![CDATA[*/
-        // Dữ liệu được truyền từ backend
-        const successMessage = /*[[${successMessage}]]*/ null;
-        const errorMessage = /*[[${errorMessage}]]*/ null;
-        const latestSmokingLog = /*[[${latestSmokingLog}]]*/ null;
-        const smokeFreeDays = /*[[${smokeFreeDays}]]*/ 0;
-        const potentialMoneySaved = /*[[${potentialMoneySaved}]]*/ 0.0;
-        const userAchievements = /*[[${userAchievements}]]*/ [];
-        /*]]>*/
+    <div class="chart-container">
+        <h2>Số điếu thuốc hút hàng tuần</h2>
+        <canvas id="weeklySmokingChart"></canvas>
+    </div>
 
-        const alertContainer = document.getElementById('alertContainer');
+    <div class="chart-container">
+        <h2>Tiền tiết kiệm tích lũy</h2>
+        <canvas id="cumulativeMoneySavedChart"></canvas>
+    </div>
 
-        function showAlert(message, type = 'info', duration = 5000) {
-            const alertDiv = document.createElement('div');
-            alertDiv.className = `alert-popup ${type}`;
-            alertDiv.innerHTML = `
-                <span>${message}</span>
-                <button class="close-btn">&times;</button>
-            `;
-            alertContainer.appendChild(alertDiv);
+    <div class="health-progress-section">
+        <h2>Tiến trình sức khỏe của bạn</h2>
+        <ul class="health-milestones-list">
+            <li th:each="milestone : ${healthMilestones}" th:classappend="${milestone.achieved ? 'achieved' : 'pending'}" class="health-milestone-item">
+                <span class="icon" th:text="${milestone.achieved ? '✅' : '⏳'}"></span>
+                <div>
+                    <h4 th:text="${milestone.name}"></h4>
+                    <p th:text="${milestone.description}"></p>
+                </div>
+            </li>
+            <li th:if="${healthMilestones == null || healthMilestones.isEmpty()}" class="health-milestone-item pending">
+                <span class="icon">ℹ️</span>
+                <div>
+                    <h4>Chưa có dữ liệu sức khỏe</h4>
+                    <p>Hãy bắt đầu hành trình cai thuốc của bạn bằng cách cập nhật hồ sơ và ghi nhận ngày bắt đầu cai!</p>
+                </div>
+            </li>
+        </ul>
+    </div>
 
-            setTimeout(() => {
-                alertDiv.classList.add('show');
-            }, 100);
+    <div class="achievements-section">
+        <h2>Thành tích của bạn</h2>
+        <div th:if="${userAchievements == null || userAchievements.isEmpty()}">
+            <p>Bạn chưa đạt được thành tích nào. Hãy tiếp tục hành trình cai thuốc để mở khóa các huy hiệu!</p>
+        </div>
+        <div th:unless="${userAchievements == null || userAchievements.isEmpty()}" class="achievements-grid">
+            <div class="achievement-item" th:each="userAchievement : ${userAchievements}">
+               <img th:if="${userAchievement.achievement.iconUrl != null}"Add commentMore actions
+                        th:src="${userAchievement.achievement.iconUrl}"
+                        alt="Icon"
+                        th:title="${userAchievement.achievement.description}">
+                <h4 th:text="${userAchievement.achievement.name}"></h4>
+                <p th:text="${#temporals.format(userAchievement.dateAchieved, 'dd/MM/yyyy')}"></p>
+            </div>
+        </div>
+    </div>
 
-            const timeoutId = setTimeout(() => {
-                alertDiv.classList.remove('show');
-                alertDiv.addEventListener('transitionend', () => alertDiv.remove());
-            }, duration);
+    <div class="action-buttons">
+        <a th:href="@{/smoking/log}" class="btn-primary">Ghi nhận hoạt động hút thuốc</a>
+        <a th:href="@{/smoking/quit-plan}" class="btn-secondary">Lập kế hoạch cai thuốc</a>
+    </div>
+</div>
 
-            alertDiv.querySelector('.close-btn').addEventListener('click', () => {
-                clearTimeout(timeoutId);
-                alertDiv.classList.remove('show');
-                alertDiv.addEventListener('transitionend', () => alertDiv.remove());
-            });
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    // Dữ liệu được truyền từ backend
+    const successMessage = /*[[${successMessage}]]*/ null;
+    const errorMessage = /*[[${errorMessage}]]*/ null;
+    const latestSmokingLog = /*[[${latestSmokingLog}]]*/ null;
+    const smokeFreeDays = /*[[${smokeFreeDays}]]*/ 0;
+    const moneySaved = /*[[${moneySaved}]]*/ 0.0;
+    const userAchievements = /*[[${userAchievements}]]*/ [];
+    const healthMilestones = /*[[${healthMilestones}]]*/ [];
+    const userId = /*[[${userId}]]*/ null; // Lấy userId để gọi API
+    /*]]>*/
+
+    const alertContainer = document.getElementById('alertContainer');
+
+    function showAlert(message, type = 'info', duration = 5000) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert-popup ${type}`;
+        alertDiv.innerHTML = `
+            <span>${message}</span>
+            <button class="close-btn">&times;</button>
+        `;
+        alertContainer.appendChild(alertDiv);
+
+        setTimeout(() => {
+            alertDiv.classList.add('show');
+        }, 100);
+
+        const timeoutId = setTimeout(() => {
+            alertDiv.classList.remove('show');
+            alertDiv.addEventListener('transitionend', () => alertDiv.remove());
+        }, duration);
+
+        alertDiv.querySelector('.close-btn').addEventListener('click', () => {
+            clearTimeout(timeoutId);
+            alertDiv.classList.remove('show');
+            alertDiv.addEventListener('transitionend', () => alertDiv.remove());
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log("🧪 DEBUG - userId: ", userId);
+        // Hiển thị các thông báo từ redirect (nếu có)
+        if (successMessage) {
+            showAlert(successMessage, 'success');
+        }
+        if (errorMessage) {
+            showAlert(errorMessage, 'error');
         }
 
-        // Logic hiển thị thông báo theo thứ tự ưu tiên
-        document.addEventListener('DOMContentLoaded', () => {
-            // Các thông báo chung từ redirect luôn được hiển thị
-            if (successMessage) {
-                showAlert(successMessage, 'success');
-            }
-            if (errorMessage) {
-                showAlert(errorMessage, 'error');
-            }
+        // Logic hiển thị thông báo ưu tiên
+        let priorityAlertShown = false;
 
-            let priorityAlertShown = false;
-
-            // 1. Ưu tiên kiểm tra và thông báo huy hiệu mới
-            // Giả định `userAchievements` đã được sắp xếp theo ngày nhận tăng dần từ backend
-            if (userAchievements && userAchievements.length > 0) {
-                const newestAchievement = userAchievements[userAchievements.length - 1];
-                const achievementDate = new Date(newestAchievement.dateAchieved);
-                const now = new Date();
-                
-                const diffHours = Math.abs(now - achievementDate) / 36e5; // 36e5 = 1000 * 60 * 60
-
-                // Nếu huy hiệu được trao trong vòng 24 giờ qua, hiển thị thông báo
-                if (diffHours < 24) {
-                    const achievementName = newestAchievement.achievement.name;
-                    showAlert(`🎖️ Chúc mừng! Bạn vừa đạt được huy hiệu mới: "${achievementName}"!`, 'success', 8000);
-                    priorityAlertShown = true; // Đánh dấu đã hiển thị thông báo ưu tiên
+        // 1. Ưu tiên kiểm tra và thông báo mốc sức khỏe mới
+        if (healthMilestones && healthMilestones.length > 0) {
+            // Tìm mốc sức khỏe mới nhất được hoàn thành trong vòng 24 giờ qua
+            const latestAchieved = healthMilestones.findLast(m => {
+                if (m.achieved && m.dateAchieved) {
+                    const achievedDate = new Date(m.dateAchieved);
+                    const now = new Date();
+                    // Kiểm tra xem mốc này có được hoàn thành trong 24h gần nhất không
+                    return Math.abs(now - achievedDate) / 36e5 < 24; // 36e5 = 1000 * 60 * 60
                 }
+                return false;
+            });
+
+            if (latestAchieved) {
+                showAlert(`💪 Tuyệt vời! Bạn đã đạt được mốc sức khỏe mới: "${latestAchieved.name}"!`, 'success', 8000);
+                priorityAlertShown = true;
             }
+        }
 
-            // 2. Nếu không có thông báo huy hiệu mới, hiển thị các thông báo khác
-            if (!priorityAlertShown) {
-                if (smokeFreeDays > 0) {
-                    showAlert(`🎉 Bạn đã không hút thuốc được ${smokeFreeDays} ngày và tiết kiệm được ${potentialMoneySaved.toLocaleString('vi-VN')} VND!`, 'info');
-                
-                } else if (smokeFreeDays === 0 && latestSmokingLog) {
-                    const lastSmokeDate = new Date(latestSmokingLog.date);
-                    showAlert(`Bạn đã ghi nhận hút thuốc gần đây. Đừng nản lòng, hãy bắt đầu lại ngay hôm nay!`, 'warning', 10000);
-
-                } else if (smokeFreeDays === 0 && !latestSmokingLog && potentialMoneySaved === 0) {
-                    showAlert('Chào mừng bạn! Hãy cập nhật hồ sơ và ghi nhận hoạt động hút thuốc để bắt đầu hành trình của bạn!', 'info', 10000);
+        // 2. Tiếp theo là thông báo huy hiệu mới (nếu không có thông báo sức khỏe mới)
+        if (!priorityAlertShown && userAchievements && userAchievements.length > 0) {
+            // Tìm huy hiệu mới nhất được trao trong vòng 24 giờ qua
+            const newestAchievement = userAchievements.findLast(ua => {
+                if (ua.dateAchieved) {
+                    const achievementDate = new Date(ua.dateAchieved);
+                    const now = new Date();
+                    return Math.abs(now - achievementDate) / 36e5 < 24;
                 }
+                return false;
+            });
+
+            if (newestAchievement) {
+                const achievementName = newestAchievement.achievement.name;
+                showAlert(`🎖️ Chúc mừng! Bạn vừa đạt được huy hiệu mới: "${achievementName}"!`, 'success', 8000);
+                priorityAlertShown = true;
             }
-        });
+        }
+
+        // 3. Nếu không có thông báo ưu tiên nào, hiển thị các thông báo khác
+        if (!priorityAlertShown) {
+            if (smokeFreeDays > 0) {
+                // Sử dụng toLocaleString để định dạng tiền tệ một cách tự động
+                showAlert(`🎉 Bạn đã không hút thuốc được ${smokeFreeDays} ngày và tiết kiệm được ${moneySaved.toLocaleString('vi-VN')} VND!`, 'info');
+            } else if (smokeFreeDays === 0 && latestSmokingLog && latestSmokingLog.cigarettesSmoked > 0) {
+                showAlert(`Bạn đã ghi nhận hút thuốc gần đây. Đừng nản lòng, hãy bắt đầu lại ngay hôm nay!`, 'warning', 10000);
+            } else if (smokeFreeDays === 0 && (!latestSmokingLog || latestSmokingLog.cigarettesSmoked === 0) && moneySaved === 0) {
+                showAlert('Chào mừng bạn! Hãy cập nhật hồ sơ và ghi nhận hoạt động hút thuốc để bắt đầu hành trình của bạn!', 'info', 10000);
+            }
+        }
+
+        // --- Fetch và Vẽ biểu đồ ---
+        if (userId) { // Đảm bảo userId tồn tại trước khi gọi API
+            // Biểu đồ số điếu thuốc hút hàng tuần
+            fetch(`/api/smoking/stats/weekly-chart-data`) // Đã bỏ userId=${userId}
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(text => { throw new Error(`Network response was not ok (${response.status} ${response.statusText}): ${text}`); });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && data.labels && data.labels.length > 0 && data.data && data.data.length > 0) {
+                        const ctx = document.getElementById('weeklySmokingChart').getContext('2d');
+                        new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: data.labels,
+                                datasets: [{
+                                    label: data.title || 'Số điếu thuốc hút hàng tuần',
+                                    data: data.data,
+                                    backgroundColor: 'rgba(0, 123, 255, 0.7)',
+                                    borderColor: 'rgba(0, 123, 255, 1)',
+                                    borderWidth: 1
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                plugins: {
+                                    title: {
+                                        display: true,
+                                        text: data.title || 'Số điếu thuốc hút hàng tuần'
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        title: {
+                                            display: true,
+                                            text: 'Số điếu'
+                                        },
+                                        ticks: {
+                                            precision: 0
+                                        }
+                                    },
+                                    x: {
+                                        title: {
+                                            display: true,
+                                            text: 'Tuần'
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    } else {
+                        showAlert('Không có dữ liệu để vẽ biểu đồ số điếu thuốc hút hàng tuần.', 'info', 7000);
+                        console.warn("No data available for weekly smoking chart:", data);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching weekly smoking stats:', error);
+                    showAlert('Không thể tải dữ liệu biểu đồ tuần. Vui lòng thử lại sau.', 'error');
+                });
+
+            // Biểu đồ tiền tiết kiệm tích lũy
+            fetch(`/api/smoking/stats/money-saved-chart-data?daysToLookBack=90`) // Đã bỏ userId=${userId}
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(text => { throw new Error(`Network response was not ok (${response.status} ${response.statusText}): ${text}`); });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && data.labels && data.labels.length > 0 && data.data && data.data.length > 0) {
+                        const ctx = document.getElementById('cumulativeMoneySavedChart').getContext('2d');
+                        new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: data.labels,
+                                datasets: [{
+                                    label: data.title || 'Tiền tiết kiệm tích lũy',
+                                    data: data.data,
+                                    backgroundColor: 'rgba(40, 167, 69, 0.2)', // Light green fill
+                                    borderColor: 'rgba(40, 167, 69, 1)',
+                                    borderWidth: 2,
+                                    fill: true,
+                                    tension: 0.1
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                plugins: {
+                                    title: {
+                                        display: true,
+                                        text: data.title || 'Tiền tiết kiệm tích lũy'
+                                    },
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function(context) {
+                                                let label = context.dataset.label || '';
+                                                if (label) {
+                                                    label += ': ';
+                                                }
+                                                // Định dạng số tiền
+                                                return label + new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(context.raw);
+                                            }
+                                        }
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        title: {
+                                            display: true,
+                                            text: 'Số tiền (VND)'
+                                        },
+                                        // Định dạng nhãn trục Y
+                                        ticks: {
+                                            callback: function(value, index, values) {
+                                                return new Intl.NumberFormat('vi-VN').format(value); // Hiển thị số có dấu phân cách hàng nghìn
+                                            }
+                                        }
+                                    },
+                                    x: {
+                                        title: {
+                                            display: true,
+                                            text: 'Ngày'
+                                        },
+                                        ticks: {
+                                            autoSkip: true,
+                                            maxTicksLimit: 10
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    } else {
+                        showAlert('Không có dữ liệu để vẽ biểu đồ tiền tiết kiệm tích lũy.', 'info', 7000);
+                        console.warn("No data available for cumulative money saved chart:", data);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching cumulative money saved stats:', error);
+                    showAlert('Không thể tải dữ liệu biểu đồ tiền tiết kiệm. Vui lòng thử lại sau.', 'error');
+                });
+
+        } else {
+            console.error("User ID not available for API calls. Charts will not load.");
+            showAlert('Không thể tải dữ liệu biểu đồ. Vui lòng đăng nhập lại.', 'error');
+        }
+    });
 </script>
 </body>
 </html>

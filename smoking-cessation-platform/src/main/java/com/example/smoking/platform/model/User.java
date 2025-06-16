@@ -24,7 +24,7 @@ public class User {
     private String username;
 
     @Column(nullable = false)
-    private String password; 
+    private String password;
 
     @Column(nullable = false, unique = true, length = 100)
     private String email;
@@ -55,18 +55,25 @@ public class User {
     private String currentSmokingStatus; // Ví dụ: Daily, Occasional, Quit
     private Integer cigarettesPerDay; // Số điếu/ngày trước khi cai
     private Double costPerPack; // Giá tiền 1 gói thuốc
+    
+    // THÊM TRƯỜNG cigarettesPerPack VÀO ĐÂY
+    private Integer cigarettesPerPack; // Số điếu thuốc trong một gói
 
     private String cessationGoal; // Lý do/mục tiêu cai thuốc
     private LocalDate quitStartDate; // Thời điểm bắt đầu cai
     private LocalDate expectedQuitDate; // Thời điểm dự kiến cai được
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @com.fasterxml.jackson.annotation.JsonManagedReference
     private Set<Feedback> feedbacks = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserAchievement> userAchievements = new HashSet<>();
 
-    // Constructor tùy chỉnh nếu cần
+    // Constructor tùy chỉnh nếu cần (Lombok @AllArgsConstructor đã bao gồm tất cả các trường)
+    // Nếu bạn muốn một constructor chỉ với một số trường, bạn có thể tạo thủ công hoặc dùng @Builder của Lombok
+    // Constructor bạn đã cung cấp chỉ bao gồm một phần của các trường
+    // Nếu bạn muốn giữ constructor này, hãy đảm bảo các trường khác được xử lý (ví dụ: gán giá trị mặc định)
     public User(String username, String password, String email, UserRole role) {
         this.username = username;
         this.password = password;
@@ -74,5 +81,7 @@ public class User {
         this.role = role;
         this.registrationDate = LocalDateTime.now();
         this.isActive = true;
+        // Các trường khác như cigarettesPerDay, costPerPack, cigarettesPerPack, etc. sẽ là null hoặc giá trị mặc định của kiểu dữ liệu.
+        // Bạn có thể cần gán giá trị mặc định cho chúng ở đây nếu chúng không được phép null.
     }
 }

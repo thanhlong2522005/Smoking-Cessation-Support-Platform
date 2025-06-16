@@ -1,31 +1,27 @@
 package com.example.smoking.platform.controller;
 
-import java.time.LocalDateTime;
-import java.util.Optional;
 import com.example.smoking.platform.model.User;
-import com.example.smoking.platform.model.UserRole;
 import com.example.smoking.platform.model.SmokingLog;
 import com.example.smoking.platform.service.AchievementService;
 import com.example.smoking.platform.service.SmokingLogService;
 import com.example.smoking.platform.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication; 
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import java.util.Optional;
 
-@Controller // Đánh dấu đây là một Spring MVC Controller
+@Controller
 public class HomeController {
 
     @Autowired
     private UserService userService;
-    @Autowired 
+    @Autowired
     private AchievementService achievementService;
-    @Autowired 
+    @Autowired
     private SmokingLogService smokingLogService;
 
     @GetMapping("/")
@@ -33,37 +29,44 @@ public class HomeController {
         return "index"; // Trang chủ giới thiệu
     }
 
-    @GetMapping("/login") // Hiển thị trang đăng nhập
+    @GetMapping("/login")
     public String login() {
-        return "login";
+        return "login"; // Hiển thị trang đăng nhập
     }
 
     @GetMapping("/dashboard")
-    public String dashboard(Model model) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String currentUsername = authentication.getName();
+    public String dashboard(Model model, RedirectAttributes redirectAttributes) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String currentUsername = authentication.getName();
 
-        Optional<User> currentUserOptional = userService.getUserByUsername(currentUsername);
+            Optional<User> currentUserOptional = userService.getUserByUsername(currentUsername);
 
-        if (currentUserOptional.isEmpty()) {
-        } else {
+            if (currentUserOptional.isEmpty()) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy người dùng.");
+                return "redirect:/login";
+            }
+
             User currentUser = currentUserOptional.get();
+
+            // Truyền dữ liệu cho frontend
+            model.addAttribute("userId", currentUser.getId()); // Cần cho API JavaScript
+            model.addAttribute("user", currentUser); // Đối tượng User đầy đủ
             model.addAttribute("userAchievements", achievementService.getUserAchievements(currentUser));
 
-            // Lấy thông tin cho popup thông báo
             Optional<SmokingLog> latestLogOptional = smokingLogService.findLatestSmokingLogByUser(currentUser);
-            model.addAttribute("latestSmokingLog", latestLogOptional.orElse(null)); // Có thể là null nếu chưa có log nào
+            model.addAttribute("latestSmokingLog", latestLogOptional.orElse(null));
 
-            Optional<Long> smokeFreeDays = smokingLogService.getSmokeFreeDays(currentUser);
-            model.addAttribute("smokeFreeDays", smokeFreeDays.orElse(0L)); // 0 nếu không có ngày cai hoặc đã tái nghiện
+            model.addAttribute("smokeFreeDays", smokingLogService.calculateDaysWithoutSmoking(currentUser));
+            model.addAttribute("moneySaved", smokingLogService.calculateMoneySaved(currentUser));
+            model.addAttribute("healthMilestones", smokingLogService.getHealthProgress(currentUser)); // Từ file 1
 
-            Optional<Double> potentialMoneySaved = smokingLogService.calculatePotentialMoneySaved(currentUser);
-            model.addAttribute("potentialMoneySaved", potentialMoneySaved.orElse(0.0)); // 0.0 nếu không tính toán được
+            return "dashboard";
 
-            // Thêm các thuộc tính người dùng cần thiết cho dashboard nếu chưa có
-            model.addAttribute("user", currentUser);
+        } catch (Exception e) {
+            e.printStackTrace(); // Ghi log chi tiết lỗi (nên thay bằng logging framework như SLF4J trong production)
+            redirectAttributes.addFlashAttribute("errorMessage", "Đã xảy ra lỗi khi tải dashboard.");
+            return "redirect:/login";
         }
-        return "dashboard";
     }
-
 }

@@ -7,16 +7,18 @@ import com.example.smoking.platform.service.QuitPlanService;
 import com.example.smoking.platform.service.SmokingLogService;
 import com.example.smoking.platform.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Optional;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/smoking")
@@ -52,18 +54,18 @@ public class SmokingController {
 
         public static class ProgressResponse {
             private final int daysWithoutSmoking;
-            private final double totalCost;
-            private final String healthImprovement;
+            private final double moneySaved;
+            private final List<SmokingLogService.HealthMilestone> healthImprovement;
 
-            public ProgressResponse(int daysWithoutSmoking, double totalCost, String healthImprovement) {
+            public ProgressResponse(int daysWithoutSmoking, double moneySaved, List<SmokingLogService.HealthMilestone> healthImprovement) {
                 this.daysWithoutSmoking = daysWithoutSmoking;
-                this.totalCost = totalCost;
+                this.moneySaved = moneySaved;
                 this.healthImprovement = healthImprovement;
             }
 
             public int getDaysWithoutSmoking() { return daysWithoutSmoking; }
-            public double getTotalCost() { return totalCost; }
-            public String getHealthImprovement() { return healthImprovement; }
+            public double getMoneySaved() { return moneySaved; }
+            public List<SmokingLogService.HealthMilestone> getHealthImprovement() { return healthImprovement; }
         }
 
         public static class QuitPlanResponse {
@@ -79,11 +81,48 @@ public class SmokingController {
             public Long getPlanId() { return planId; }
         }
 
-        @PreAuthorize("#userId == authentication.principal.id")
+        public static class WeeklyStatsResponse {
+            private final List<String> labels;
+            private final List<Integer> data;
+            private final String title;
+
+            public WeeklyStatsResponse(List<String> labels, List<Integer> data, String title) {
+                this.labels = labels;
+                this.data = data;
+                this.title = title;
+            }
+
+            public List<String> getLabels() { return labels; }
+            public List<Integer> getData() { return data; }
+            public String getTitle() { return title; }
+        }
+
+        public static class CumulativeMoneySavedResponse {
+            private final List<String> labels;
+            private final List<Double> data;
+            private final String title;
+
+            public CumulativeMoneySavedResponse(List<String> labels, List<Double> data, String title) {
+                this.labels = labels;
+                this.data = data;
+                this.title = title;
+            }
+
+            public List<String> getLabels() { return labels; }
+            public List<Double> getData() { return data; }
+            public String getTitle() { return title; }
+        }
+
+        // Helper method to get authenticated user
+        private User getAuthenticatedUser(Authentication authentication) {
+            String username = authentication.getName();
+            return userService.getUserByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại: " + username));
+        }
+
         @PostMapping("/log")
-        public ResponseEntity<?> logSmoking(@RequestParam Long userId, @RequestBody SmokingLog log) {
-            User user = userService.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+        public ResponseEntity<?> logSmoking(Authentication authentication, @RequestBody SmokingLog log) {
+            User user = getAuthenticatedUser(authentication);
             log.setUser(user);
             try {
                 SmokingLog savedLog = smokingLogService.save(log);
@@ -93,63 +132,69 @@ public class SmokingController {
             }
         }
 
-        @PreAuthorize("#userId == authentication.principal.id")
         @GetMapping("/logs")
-        public ResponseEntity<?> getSmokingLogs(@RequestParam Long userId) {
-            User user = userService.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+        public ResponseEntity<?> getSmokingLogs(Authentication authentication) {
+            User user = getAuthenticatedUser(authentication);
             return ResponseEntity.ok(smokingLogService.getLogsByUser(user));
         }
 
-        @PreAuthorize("#userId == authentication.principal.id")
         @GetMapping("/logs/by-date")
-        public ResponseEntity<?> getLogsByDate(@RequestParam Long userId, @RequestParam String start, @RequestParam String end) {
-            User user = userService.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+        public ResponseEntity<?> getLogsByDate(Authentication authentication, @RequestParam String start, @RequestParam String end) {
+            User user = getAuthenticatedUser(authentication);
             try {
                 LocalDateTime startDate = LocalDateTime.parse(start);
                 LocalDateTime endDate = LocalDateTime.parse(end);
                 if (startDate.isAfter(endDate)) {
-                    return ResponseEntity.badRequest().body(new SmokingLogResponse("Start date must be before end date", null));
+                    return ResponseEntity.badRequest().body(new SmokingLogResponse("Ngày bắt đầu phải trước ngày kết thúc", null));
                 }
                 return ResponseEntity.ok(smokingLogService.getLogsByUserAndDate(user, startDate, endDate));
             } catch (Exception e) {
-                return ResponseEntity.badRequest().body(new SmokingLogResponse("Invalid date format: " + e.getMessage(), null));
+                return ResponseEntity.badRequest().body(new SmokingLogResponse("Định dạng ngày không hợp lệ: " + e.getMessage(), null));
             }
         }
 
-        @PreAuthorize("#userId == authentication.principal.id")
         @GetMapping("/progress")
-        public ResponseEntity<?> getProgress(@RequestParam Long userId) {
-            User user = userService.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+        public ResponseEntity<?> getProgress(Authentication authentication) {
+            User user = getAuthenticatedUser(authentication);
             int daysWithoutSmoking = smokingLogService.calculateDaysWithoutSmoking(user);
-            double totalCost = smokingLogService.calculateTotalCost(user);
-            String healthImprovement = smokingLogService.estimateHealthImprovement(user);
-            return ResponseEntity.ok(new ProgressResponse(daysWithoutSmoking, totalCost, healthImprovement));
+            double moneySaved = smokingLogService.calculateMoneySaved(user);
+            List<SmokingLogService.HealthMilestone> healthImprovement = smokingLogService.estimateHealthImprovement(user);
+            return ResponseEntity.ok(new ProgressResponse(daysWithoutSmoking, moneySaved, healthImprovement));
         }
 
-        @PreAuthorize("#userId == authentication.principal.id")
-        @GetMapping("/stats/weekly")
-        public ResponseEntity<?> getSmokingStatsByWeek(@RequestParam Long userId) {
-            User user = userService.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
-            return ResponseEntity.ok(smokingLogService.getSmokingStatsByWeek(user));
+        // Endpoint cho dữ liệu biểu đồ tuần (từ SmokingStatsApiController)
+        @GetMapping("/stats/weekly-chart-data")
+        public ResponseEntity<?> getSmokingStatsByWeekChartData(Authentication authentication) {
+            User user = getAuthenticatedUser(authentication);
+            Map<String, Integer> rawStats = smokingLogService.getSmokingStatsByWeek(user);
+            List<String> labels = new ArrayList<>(rawStats.keySet());
+            List<Integer> data = new ArrayList<>(rawStats.values());
+            return ResponseEntity.ok(new WeeklyStatsResponse(labels, data, "Số điếu thuốc hút trong 4 tuần gần nhất"));
         }
 
-        @PreAuthorize("#userId == authentication.principal.id")
-        @GetMapping("/stats/total-cost")
-        public ResponseEntity<?> getTotalCost(@RequestParam Long userId) {
-            User user = userService.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+        // Endpoint cho dữ liệu biểu đồ tiền tiết kiệm tích lũy (từ SmokingStatsApiController)
+        @GetMapping("/stats/money-saved-chart-data")
+        public ResponseEntity<?> getMoneySavedChartData(Authentication authentication,
+                                                        @RequestParam(defaultValue = "90") int daysToLookBack) {
+            User user = getAuthenticatedUser(authentication);
+            Map<LocalDate, Double> rawStats = smokingLogService.getCumulativeMoneySavedChartData(user, daysToLookBack);
+            List<LocalDate> sortedDates = rawStats.keySet().stream().sorted().collect(Collectors.toList());
+            List<String> labels = sortedDates.stream()
+                    .map(date -> date.format(DateTimeFormatter.ofPattern("dd/MM")))
+                    .collect(Collectors.toList());
+            List<Double> data = sortedDates.stream().map(rawStats::get).collect(Collectors.toList());
+            return ResponseEntity.ok(new CumulativeMoneySavedResponse(labels, data, "Tiền tiết kiệm tích lũy"));
+        }
+
+        @GetMapping("/stats/total-cost-spent")
+        public ResponseEntity<?> getTotalCostSpent(Authentication authentication) {
+            User user = getAuthenticatedUser(authentication);
             return ResponseEntity.ok(smokingLogService.calculateTotalCost(user));
         }
 
-        @PreAuthorize("#userId == authentication.principal.id")
         @PostMapping("/quit-plan")
-        public ResponseEntity<?> createQuitPlan(@RequestParam Long userId, @RequestBody QuitPlan plan) {
-            User user = userService.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+        public ResponseEntity<?> createQuitPlan(Authentication authentication, @RequestBody QuitPlan plan) {
+            User user = getAuthenticatedUser(authentication);
             plan.setUser(user);
             try {
                 QuitPlan savedPlan = quitPlanService.save(plan);
@@ -159,47 +204,50 @@ public class SmokingController {
             }
         }
 
-        @PreAuthorize("#userId == authentication.principal.id")
         @GetMapping("/quit-plan")
-        public ResponseEntity<?> getQuitPlans(@RequestParam Long userId) {
-            User user = userService.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+        public ResponseEntity<?> getQuitPlans(Authentication authentication) {
+            User user = getAuthenticatedUser(authentication);
             return ResponseEntity.ok(quitPlanService.getPlansByUser(user));
         }
 
-        @PreAuthorize("#userId == authentication.principal.id")
         @PostMapping("/quit-plan/{planId}/status")
-        public ResponseEntity<?> updateQuitPlanStatus(@RequestParam Long userId, @PathVariable Long planId, @RequestBody QuitPlan.Status status) {
+        public ResponseEntity<QuitPlanResponse> updateQuitPlanStatus(Authentication authentication, @PathVariable Long planId, @RequestBody QuitPlan.Status status) {
+            User user = getAuthenticatedUser(authentication);
+            QuitPlan existingPlan = quitPlanService.findById(planId)
+                    .orElseThrow(() -> new RuntimeException("Kế hoạch cai thuốc không tồn tại với ID: " + planId));
+            if (!existingPlan.getUser().getId().equals(user.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new QuitPlanResponse("Bạn không có quyền cập nhật kế hoạch này", null));
+            }
             try {
-                QuitPlan updatedPlan = quitPlanService.updateStatus(planId, status);
+                QuitPlan updatedPlan = quitPlanService.updateStatus(planId, status)
+                        .orElseThrow(() -> new RuntimeException("Cập nhật trạng thái kế hoạch thất bại"));
                 return ResponseEntity.ok(new QuitPlanResponse("Cập nhật trạng thái kế hoạch thành công", updatedPlan.getId()));
-            } catch (IllegalArgumentException e) {
-                return ResponseEntity.badRequest().body(new QuitPlanResponse(e.getMessage(), null));
+            } catch (RuntimeException e) { // Chỉ giữ RuntimeException
+                return ResponseEntity.badRequest()
+                        .body(new QuitPlanResponse(e.getMessage(), null));
             }
         }
     }
 
-    // Web Controller
-    // Đã sửa để khớp với tên file HTML: log-smoking.html và view-logs.html
+    // Web Controller (Thymeleaf views)
     @GetMapping("/log")
     public String showLogForm(Model model, Authentication authentication) {
         String currentUsername = authentication.getName();
         Optional<User> currentUserOptional = userService.getUserByUsername(currentUsername);
-
         if (currentUserOptional.isEmpty()) {
             return "redirect:/login?error=userNotFound";
         }
-
         User currentUser = currentUserOptional.get();
         model.addAttribute("userId", currentUser.getId());
         model.addAttribute("log", new SmokingLog());
-        return "log-smoking"; 
+        return "log-smoking";
     }
 
     @PostMapping("/log")
     public String saveLog(@ModelAttribute("log") SmokingLog log, @RequestParam Long userId, Model model) {
         User user = userService.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại với ID: " + userId));
         log.setUser(user);
         try {
             smokingLogService.save(log);
@@ -210,50 +258,44 @@ public class SmokingController {
             model.addAttribute("success", false);
         }
         model.addAttribute("userId", userId);
-        return "log-smoking"; 
+        return "log-smoking";
     }
 
     @GetMapping("/logs")
     public String showLogs(Model model, Authentication authentication) {
         String currentUsername = authentication.getName();
         Optional<User> currentUserOptional = userService.getUserByUsername(currentUsername);
-
         if (currentUserOptional.isEmpty()) {
             return "redirect:/login?error=userNotFound";
         }
-
         User currentUser = currentUserOptional.get();
         model.addAttribute("userId", currentUser.getId());
-        // Bạn có thể muốn thêm danh sách logs vào model ở đây nếu trang logs hiển thị trực tiếp dữ liệu
-        // model.addAttribute("smokingLogs", smokingLogService.getLogsByUser(currentUser));
-        return "view-logs"; 
+        return "view-logs";
     }
 
     @GetMapping("/quit-plan")
     public String showQuitPlanForm(Model model, Authentication authentication) {
         String currentUsername = authentication.getName();
         Optional<User> currentUserOptional = userService.getUserByUsername(currentUsername);
-
         if (currentUserOptional.isEmpty()) {
             return "redirect:/login?error=userNotFound";
         }
-
         User currentUser = currentUserOptional.get();
         model.addAttribute("userId", currentUser.getId());
         model.addAttribute("quitPlan", new QuitPlan());
         model.addAttribute("statuses", QuitPlan.Status.values());
         model.addAttribute("suggestedPhases", Arrays.asList(
-            "Giai đoạn 1: Giảm số lượng điếu thuốc mỗi ngày",
-            "Giai đoạn 2: Thay thế thói quen hút thuốc bằng hoạt động khác",
-            "Giai đoạn 3: Ngừng hút thuốc hoàn toàn"
+                "Giai đoạn 1: Giảm số lượng điếu thuốc mỗi ngày",
+                "Giai đoạn 2: Thay thế thói quen hút thuốc bằng hoạt động khác",
+                "Giai đoạn 3: Ngừng hút thuốc hoàn toàn"
         ));
-        return "quit-plan"; 
+        return "quit-plan";
     }
 
     @PostMapping("/quit-plan")
     public String saveQuitPlan(@ModelAttribute("quitPlan") QuitPlan quitPlan, @RequestParam Long userId, Model model) {
         User user = userService.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+                .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại với ID: " + userId));
         quitPlan.setUser(user);
         try {
             quitPlanService.save(quitPlan);
@@ -266,25 +308,23 @@ public class SmokingController {
         model.addAttribute("userId", userId);
         model.addAttribute("statuses", QuitPlan.Status.values());
         model.addAttribute("suggestedPhases", Arrays.asList(
-            "Giai đoạn 1: Giảm số lượng điếu thuốc mỗi ngày",
-            "Giai đoạn 2: Thay thế thói quen hút thuốc bằng hoạt động khác",
-            "Giai đoạn 3: Ngừng hút thuốc hoàn toàn"
+                "Giai đoạn 1: Giảm số lượng điếu thuốc mỗi ngày",
+                "Giai đoạn 2: Thay thế thói quen hút thuốc bằng hoạt động khác",
+                "Giai đoạn 3: Ngừng hút thuốc hoàn toàn"
         ));
-        return "quit-plan"; 
+        return "quit-plan";
     }
 
     @GetMapping("/quit-plans")
     public String showQuitPlans(Model model, Authentication authentication) {
         String currentUsername = authentication.getName();
         Optional<User> currentUserOptional = userService.getUserByUsername(currentUsername);
-
         if (currentUserOptional.isEmpty()) {
             return "redirect:/login?error=userNotFound";
         }
-
         User currentUser = currentUserOptional.get();
         model.addAttribute("userId", currentUser.getId());
         model.addAttribute("quitPlans", quitPlanService.getPlansByUser(currentUser));
-        return "quit-plans"; 
+        return "quit-plans";
     }
 }

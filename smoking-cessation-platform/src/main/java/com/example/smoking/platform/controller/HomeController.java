@@ -35,10 +35,17 @@ public class HomeController {
     }
 
     @GetMapping("/dashboard")
+<<<<<<< HEAD
     public String dashboard(Model model, RedirectAttributes redirectAttributes) {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String currentUsername = authentication.getName();
+=======
+public String dashboard(Model model, RedirectAttributes redirectAttributes) {
+    try {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+>>>>>>> de2304c8418970226708d79655504461d3df1bad
 
             Optional<User> currentUserOptional = userService.getUserByUsername(currentUsername);
 
@@ -47,6 +54,7 @@ public class HomeController {
                 return "redirect:/login";
             }
 
+<<<<<<< HEAD
             User currentUser = currentUserOptional.get();
 
             // Truyền dữ liệu cho frontend
@@ -69,4 +77,32 @@ public class HomeController {
             return "redirect:/login";
         }
     }
+=======
+        if (currentUserOptional.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy người dùng.");
+            return "redirect:/login";
+        }
+
+        User currentUser = currentUserOptional.get();
+
+        // Truyền dữ liệu cho frontend
+        model.addAttribute("userId", currentUser.getId());
+        model.addAttribute("userAchievements", achievementService.getUserAchievements(currentUser));
+
+        Optional<SmokingLog> latestLogOptional = smokingLogService.findLatestSmokingLogByUser(currentUser);
+        model.addAttribute("latestSmokingLog", latestLogOptional.orElse(null));
+
+        model.addAttribute("smokeFreeDays", smokingLogService.calculateDaysWithoutSmoking(currentUser));
+        model.addAttribute("moneySaved", smokingLogService.calculateMoneySaved(currentUser));
+        model.addAttribute("user", currentUser);
+
+        return "dashboard";
+
+    } catch (Exception e) {
+        e.printStackTrace(); // Ghi log chi tiết lỗi
+        redirectAttributes.addFlashAttribute("errorMessage", "Đã xảy ra lỗi khi tải dashboard.");
+        return "redirect:/login"; // hoặc chuyển đến trang lỗi riêng nếu có
+    }
+}
+>>>>>>> de2304c8418970226708d79655504461d3df1bad
 }

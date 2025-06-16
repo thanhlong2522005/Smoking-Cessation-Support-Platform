@@ -68,6 +68,7 @@ public class User {
     private Set<Feedback> feedbacks = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @com.fasterxml.jackson.annotation.JsonManagedReference
     private Set<UserAchievement> userAchievements = new HashSet<>();
 
     // Constructor tùy chỉnh nếu cần (Lombok @AllArgsConstructor đã bao gồm tất cả các trường)

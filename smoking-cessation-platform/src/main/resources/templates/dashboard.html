@@ -327,7 +327,10 @@
             </div>
             <div th:unless="${userAchievements.isEmpty()}" class="achievements-grid">
                 <div class="achievement-item" th:each="userAchievement : ${userAchievements}">
-                    <img th:src="${userAchievement.achievement.iconUrl}" alt="Icon" th:title="${userAchievement.achievement.description}">
+                    <img th:if="${userAchievement.achievement.iconUrl != null}"
+                        th:src="${userAchievement.achievement.iconUrl}"
+                        alt="Icon"
+                        th:title="${userAchievement.achievement.description}">
                     <h4 th:text="${userAchievement.achievement.name}"></h4>
                     <p th:text="${#temporals.format(userAchievement.dateAchieved, 'dd/MM/yyyy')}"></p>
                 </div>
@@ -381,6 +384,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            console.log("🧪 DEBUG - userId: ", userId);
             // Hiển thị các thông báo từ redirect (nếu có)
             if (successMessage) {
                 showAlert(successMessage, 'success');
@@ -398,11 +402,15 @@
                 const achievementDate = new Date(newestAchievement.dateAchieved);
                 const now = new Date();
                 
-                // Kiểm tra nếu huy hiệu được trao trong vòng 24 giờ qua (hoặc một khoảng thời gian hợp lý)
-                // Cần đảm bảo rằng dateAchieved từ backend không phải là một chuỗi rỗng hoặc null.
-                if (newestAchievement.dateAchieved && Math.abs(now - achievementDate) / 36e5 < 24) { // 36e5 = 1000 * 60 * 60
+                const achievementKey = `badge-${newestAchievement.achievement.name}-${newestAchievement.dateAchieved}`;
+                const alreadyShown = localStorage.getItem(achievementKey);
+
+                if (!alreadyShown && newestAchievement.dateAchieved && Math.abs(now - achievementDate) / 36e5 < 24) {
                     const achievementName = newestAchievement.achievement.name;
                     showAlert(`🎖️ Chúc mừng! Bạn vừa đạt được huy hiệu mới: "${achievementName}"!`, 'success', 8000);
+
+                    // Đánh dấu là đã hiển thị để không hiển thị lại lần sau
+                    localStorage.setItem(achievementKey, "shown");
                     priorityAlertShown = true;
                 }
             }

@@ -53,9 +53,6 @@ public class SmokingLogService {
 
         SmokingLog savedLog = smokingLogRepository.save(smokingLog);
 
-        // Sau khi lưu nhật ký, kiểm tra và cập nhật huy hiệu cho người dùng
-        achievementService.evaluateAndAwardAchievements(savedLog.getUser());
-
         return savedLog;
     }
 

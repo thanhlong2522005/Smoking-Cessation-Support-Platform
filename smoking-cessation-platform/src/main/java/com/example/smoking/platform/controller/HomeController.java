@@ -39,36 +39,37 @@ public class HomeController {
     }
 
     @GetMapping("/dashboard")
-public String dashboard(Model model) {
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    String currentUsername = authentication.getName();
+public String dashboard(Model model, RedirectAttributes redirectAttributes) {
+    try {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
 
-    Optional<User> currentUserOptional = userService.getUserByUsername(currentUsername);
+        Optional<User> currentUserOptional = userService.getUserByUsername(currentUsername);
 
-    if (currentUserOptional.isEmpty()) {
-        // Xử lý trường hợp người dùng không tìm thấy (có thể redirect hoặc hiển thị lỗi)
-        // Hiện tại, khối này đang trống, nên nếu không tìm thấy user, các attribute dưới sẽ không được thêm.
-        // Có thể thêm logging hoặc redirect về trang login với thông báo lỗi
-        // return "redirect:/login?error=userNotFound";
-    } else {
+        if (currentUserOptional.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy người dùng.");
+            return "redirect:/login";
+        }
+
         User currentUser = currentUserOptional.get();
 
-        // THÊM userId vào model để JavaScript có thể sử dụng cho API calls
-        model.addAttribute("userId", currentUser.getId()); // <--- THÊM DÒNG NÀY
-
+        // Truyền dữ liệu cho frontend
+        model.addAttribute("userId", currentUser.getId());
         model.addAttribute("userAchievements", achievementService.getUserAchievements(currentUser));
 
-        // Lấy thông tin cho popup thông báo và hiển thị trên dashboard
         Optional<SmokingLog> latestLogOptional = smokingLogService.findLatestSmokingLogByUser(currentUser);
         model.addAttribute("latestSmokingLog", latestLogOptional.orElse(null));
 
-        // Sử dụng các phương thức tính toán mới nhất và nhất quán với tên biến trong frontend
-        model.addAttribute("smokeFreeDays", (long) smokingLogService.calculateDaysWithoutSmoking(currentUser)); // <--- ĐÃ SỬA
-        model.addAttribute("moneySaved", smokingLogService.calculateMoneySaved(currentUser)); // <--- ĐÃ SỬA VÀ ĐỔI TÊN
+        model.addAttribute("smokeFreeDays", smokingLogService.calculateDaysWithoutSmoking(currentUser));
+        model.addAttribute("moneySaved", smokingLogService.calculateMoneySaved(currentUser));
+        model.addAttribute("user", currentUser);
 
-        // Thêm các thuộc tính người dùng cần thiết cho dashboard nếu chưa có
-        model.addAttribute("user", currentUser); // Giữ lại nếu các phần khác của dashboard cần đối tượng user
+        return "dashboard";
+
+    } catch (Exception e) {
+        e.printStackTrace(); // Ghi log chi tiết lỗi
+        redirectAttributes.addFlashAttribute("errorMessage", "Đã xảy ra lỗi khi tải dashboard.");
+        return "redirect:/login"; // hoặc chuyển đến trang lỗi riêng nếu có
     }
-    return "dashboard";
 }
 }

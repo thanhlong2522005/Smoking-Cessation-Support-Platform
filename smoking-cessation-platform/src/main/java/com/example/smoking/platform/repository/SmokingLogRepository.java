@@ -43,7 +43,6 @@ public interface SmokingLogRepository extends JpaRepository<SmokingLog, Long> {
 
     List<SmokingLog> findByUserAndDateAfterOrderByDateAsc(User user, LocalDateTime date);
 
-<<<<<<< HEAD
     // BỔ SUNG PHƯƠNG THỨC NÀY ĐỂ KHẮC PHỤC LỖI "findFirstByUserAndCigarettesSmokedGreaterThanOrderByDateDesc"
     // Trả về Optional để xử lý trường hợp không có kết quả
     Optional<SmokingLog> findFirstByUserAndCigarettesSmokedGreaterThanOrderByDateDesc(User user, int cigarettesSmoked);
@@ -52,7 +51,4 @@ public interface SmokingLogRepository extends JpaRepository<SmokingLog, Long> {
     // Được sử dụng trong getWeeklySmokingChartData và getCumulativeMoneySavedChartData
     List<SmokingLog> findByUserAndDateBetweenOrderByDateAsc(User user, LocalDateTime startDate, LocalDateTime endDate);
 
-=======
-    
->>>>>>> de2304c8418970226708d79655504461d3df1bad
 }

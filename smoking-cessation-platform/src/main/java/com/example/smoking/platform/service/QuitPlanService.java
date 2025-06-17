@@ -78,4 +78,7 @@ public class QuitPlanService {
         }
         return quitPlanRepository.findById(id);
     }
+    public void delete(Long planId) {
+        quitPlanRepository.deleteById(planId);
+    }
 }

@@ -11,9 +11,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException; // Thêm import này
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException; // Thêm import này
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -37,6 +39,15 @@ public class SmokingController {
     @RestController
     @RequestMapping("/api/smoking")
     public class ApiController {
+
+        // --- Autowired các Services vào ApiController lồng bên trong ---
+        // Đảm bảo các service được tiêm vào đây để ApiController có thể sử dụng chúng
+        @Autowired
+        private SmokingLogService smokingLogService;
+        @Autowired
+        private UserService userService;
+        @Autowired
+        private QuitPlanService quitPlanService;
 
         // DTO cho response
         public static class SmokingLogResponse {
@@ -117,13 +128,17 @@ public class SmokingController {
         private User getAuthenticatedUser(Authentication authentication) {
             String username = authentication.getName();
             return userService.getUserByUsername(username)
-                    .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại: " + username));
+                    .orElseThrow(() -> new UsernameNotFoundException("Người dùng không tồn tại: " + username));
         }
 
         @PostMapping("/log")
         public ResponseEntity<?> logSmoking(Authentication authentication, @RequestBody SmokingLog log) {
             User user = getAuthenticatedUser(authentication);
             log.setUser(user);
+            
+            // Nên sử dụng ZoneId để đảm bảo tính nhất quán múi giờ
+            log.setDate(LocalDateTime.now()); // Hoặc LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"))
+            
             try {
                 SmokingLog savedLog = smokingLogService.save(log);
                 return ResponseEntity.ok(new SmokingLogResponse("Tình trạng hút thuốc được ghi nhận", savedLog.getId()));
@@ -162,17 +177,15 @@ public class SmokingController {
             return ResponseEntity.ok(new ProgressResponse(daysWithoutSmoking, moneySaved, healthImprovement));
         }
 
-        // Endpoint cho dữ liệu biểu đồ tuần (từ SmokingStatsApiController)
         @GetMapping("/stats/weekly-chart-data")
         public ResponseEntity<?> getSmokingStatsByWeekChartData(Authentication authentication) {
             User user = getAuthenticatedUser(authentication);
             Map<String, Integer> rawStats = smokingLogService.getSmokingStatsByWeek(user);
             List<String> labels = new ArrayList<>(rawStats.keySet());
             List<Integer> data = new ArrayList<>(rawStats.values());
-            return ResponseEntity.ok(new WeeklyStatsResponse(labels, data, "Số điếu thuốc hút trong 4 tuần gần nhất"));
+            return ResponseEntity.ok(new WeeklyStatsResponse(labels, data, "Số điếu thuốc hút trong 7 tuần gần nhất")); // Cập nhật tiêu đề
         }
 
-        // Endpoint cho dữ liệu biểu đồ tiền tiết kiệm tích lũy (từ SmokingStatsApiController)
         @GetMapping("/stats/money-saved-chart-data")
         public ResponseEntity<?> getMoneySavedChartData(Authentication authentication,
                                                         @RequestParam(defaultValue = "90") int daysToLookBack) {
@@ -214,7 +227,7 @@ public class SmokingController {
         public ResponseEntity<QuitPlanResponse> updateQuitPlanStatus(Authentication authentication, @PathVariable Long planId, @RequestBody QuitPlan.Status status) {
             User user = getAuthenticatedUser(authentication);
             QuitPlan existingPlan = quitPlanService.findById(planId)
-                    .orElseThrow(() -> new RuntimeException("Kế hoạch cai thuốc không tồn tại với ID: " + planId));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Kế hoạch cai thuốc không tồn tại với ID: " + planId));
             if (!existingPlan.getUser().getId().equals(user.getId())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(new QuitPlanResponse("Bạn không có quyền cập nhật kế hoạch này", null));
@@ -223,9 +236,36 @@ public class SmokingController {
                 QuitPlan updatedPlan = quitPlanService.updateStatus(planId, status)
                         .orElseThrow(() -> new RuntimeException("Cập nhật trạng thái kế hoạch thất bại"));
                 return ResponseEntity.ok(new QuitPlanResponse("Cập nhật trạng thái kế hoạch thành công", updatedPlan.getId()));
-            } catch (RuntimeException e) { // Chỉ giữ RuntimeException
+            } catch (RuntimeException e) {
                 return ResponseEntity.badRequest()
                         .body(new QuitPlanResponse(e.getMessage(), null));
+            }
+        }
+
+        // --- Endpoint mới để xóa kế hoạch ---
+        @DeleteMapping("/quit-plan/{planId}")
+        public ResponseEntity<QuitPlanResponse> deleteQuitPlan(
+                Authentication authentication, @PathVariable Long planId) {
+            User user = getAuthenticatedUser(authentication);
+
+            // Tìm kế hoạch để đảm bảo nó tồn tại và thuộc về người dùng hiện tại
+            QuitPlan planToDelete = quitPlanService.findById(planId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Kế hoạch cai thuốc không tồn tại với ID: " + planId));
+
+            // Kiểm tra quyền: Đảm bảo người dùng chỉ có thể xóa kế hoạch của chính họ
+            if (!planToDelete.getUser().getId().equals(user.getId())) {
+                System.err.println("Forbidden: User " + user.getUsername() + " attempted to delete quit plan " + planId + " belonging to user " + planToDelete.getUser().getUsername());
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new QuitPlanResponse("Bạn không có quyền xóa kế hoạch này", null));
+            }
+
+            try {
+                quitPlanService.delete(planId); // Gọi service để xóa
+                return ResponseEntity.ok(new QuitPlanResponse("Kế hoạch đã được xóa thành công", planId));
+            } catch (Exception e) {
+                System.err.println("Lỗi khi xóa kế hoạch có ID " + planId + ": " + e.getMessage());
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(new QuitPlanResponse("Có lỗi xảy ra khi xóa kế hoạch: " + e.getMessage(), null));
             }
         }
     }
@@ -249,6 +289,7 @@ public class SmokingController {
         User user = userService.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Người dùng không tồn tại với ID: " + userId));
         log.setUser(user);
+        log.setDate(LocalDateTime.now());
         try {
             smokingLogService.save(log);
             model.addAttribute("message", "Ghi nhận thành công!");

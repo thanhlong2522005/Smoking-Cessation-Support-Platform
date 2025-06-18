@@ -1,5 +1,6 @@
 package com.example.smoking.platform.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -12,8 +13,9 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    // Không cần @Autowired UserDetailsService ở đây nữa.
-    // Spring Security sẽ tự động tìm CustomUserDetailsService đã được @Service
+    @Autowired
+    private CustomSuccessHandler customSuccessHandler;
+
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -22,12 +24,13 @@ public class SecurityConfig {
                 // Cho phép truy cập các URL này mà không cần xác thực
                 .requestMatchers("/", "/register", "/css/**", "/js/**", "/images/**", "/api/public/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers("/rate").hasAnyRole("MEMBER", "COACH")
                 // Yêu cầu xác thực cho tất cả các request khác
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
                 .loginPage("/login") // Chỉ định trang đăng nhập tùy chỉnh
-                .defaultSuccessUrl("/dashboard", true) // URL sau khi đăng nhập thành công
+                .successHandler(customSuccessHandler) // URL sau khi đăng nhập thành công
                 .permitAll() // Cho phép tất cả mọi người truy cập trang đăng nhập
             )
             .logout(logout -> logout

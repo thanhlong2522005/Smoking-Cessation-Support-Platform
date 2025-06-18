@@ -6,6 +6,7 @@ import com.example.smoking.platform.model.UserAchievement;
 import com.example.smoking.platform.model.UserRole;
 import com.example.smoking.platform.service.AchievementService;
 import com.example.smoking.platform.service.FeedbackService;
+import com.example.smoking.platform.service.RatingService;
 import com.example.smoking.platform.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -31,6 +32,8 @@ public class AdminController {
     private FeedbackService feedbackService;
     @Autowired
     private AchievementService achievementService;
+    @Autowired
+    private RatingService ratingService;
 
     @GetMapping("/dashboard")
     public String adminDashboard(Model model) {
@@ -41,6 +44,9 @@ public class AdminController {
                                     .filter(user -> user.getRole() == UserRole.MEMBER)
                                     .collect(Collectors.toList());
         model.addAttribute("members", members);
+
+        model.addAttribute("ratings", ratingService.getAllRatings());
+        model.addAttribute("averageStars", ratingService.calculateAverageStars());
         return "admin/dashboard";
     }
 

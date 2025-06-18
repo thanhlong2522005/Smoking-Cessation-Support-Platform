@@ -362,6 +362,7 @@
         <li><a th:href="@{/smoking/quit-plan}">Lập Kế Hoạch Cai</a></li>
         <li><a th:href="@{/smoking/quit-plans}">Kế Hoạch Của Tôi</a></li>
         <li><a th:href="@{/feedback}">Gửi Phản Hồi</a></li>
+        <li><a th:href="@{/rate}">Đánh giá</a></li>
         <li sec:authorize="hasRole('ADMIN')"><a th:href="@{/admin/dashboard}">Admin Dashboard</a></li>
         <li>
             <form th:action="@{/logout}" method="post" class="logout-form">
@@ -459,6 +460,7 @@
     const smokeFreeDays = /*[[${smokeFreeDays}]]*/ 0;
     const moneySaved = /*[[${moneySaved}]]*/ 0.0;
     const userAchievements = /*[[${userAchievements}]]*/ [];
+    const userRole = /*[[${userRole}]]*/ 'MEMBER';
     const healthMilestones = /*[[${healthMilestones}]]*/ [];
     const userId = /*[[${userId}]]*/ null; // Lấy userId để gọi API
     /*]]>*/
@@ -491,40 +493,38 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        console.log("🧪 DEBUG - userId: ", userId);
-        // Hiển thị các thông báo từ redirect (nếu có)
-        if (successMessage) {
-            showAlert(successMessage, 'success');
-        }
-        if (errorMessage) {
-            showAlert(errorMessage, 'error');
-        }
+    console.log("🧪 DEBUG - userId:", userId, "role:", userRole);
 
-        // Logic hiển thị thông báo ưu tiên
+    if (userRole === 'MEMBER') {
         let priorityAlertShown = false;
 
-        // 1. Ưu tiên kiểm tra và thông báo mốc sức khỏe mới
+        // 1. Mốc sức khỏe mới
         if (healthMilestones && healthMilestones.length > 0) {
-            // Tìm mốc sức khỏe mới nhất được hoàn thành trong vòng 24 giờ qua
             const latestAchieved = healthMilestones.findLast(m => {
                 if (m.achieved && m.dateAchieved) {
                     const achievedDate = new Date(m.dateAchieved);
                     const now = new Date();
-                    // Kiểm tra xem mốc này có được hoàn thành trong 24h gần nhất không
-                    return Math.abs(now - achievedDate) / 36e5 < 24; // 36e5 = 1000 * 60 * 60
+                    return Math.abs(now - achievedDate) / 36e5 < 24;
                 }
                 return false;
             });
 
             if (latestAchieved) {
-                showAlert(`💪 Tuyệt vời! Bạn đã đạt được mốc sức khỏe mới: "${latestAchieved.name}"!`, 'success', 8000);
-                priorityAlertShown = true;
+                const milestoneName = latestAchieved.name;
+                const milestoneDateStr = latestAchieved.dateAchieved;
+                const milestoneKey = `shownMilestone-${milestoneName}-${milestoneDateStr}`;
+                const alreadyShown = localStorage.getItem(milestoneKey);
+
+                if (!alreadyShown) {
+                    showAlert(`💪 Tuyệt vời! Bạn đã đạt được mốc sức khỏe mới: "${milestoneName}"!`, 'success', 8000);
+                    localStorage.setItem(milestoneKey, "true");
+                    priorityAlertShown = true;
+                }
             }
         }
 
-        // 2. Tiếp theo là thông báo huy hiệu mới (nếu không có thông báo sức khỏe mới)
+        // 2. Huy hiệu mới
         if (!priorityAlertShown && userAchievements && userAchievements.length > 0) {
-            // Tìm huy hiệu mới nhất được trao trong vòng 24 giờ qua
             const newestAchievement = userAchievements.findLast(ua => {
                 if (ua.dateAchieved) {
                     const achievementDate = new Date(ua.dateAchieved);
@@ -536,15 +536,21 @@
 
             if (newestAchievement) {
                 const achievementName = newestAchievement.achievement.name;
-                showAlert(`🎖️ Chúc mừng! Bạn vừa đạt được huy hiệu mới: "${achievementName}"!`, 'success', 8000);
-                priorityAlertShown = true;
+                const achievementDateStr = newestAchievement.dateAchieved;
+                const achievementKey = `shownAchievement-${achievementName}-${achievementDateStr}`;
+                const alreadyShown = localStorage.getItem(achievementKey);
+
+                if (!alreadyShown) {
+                    showAlert(`🎖️ Chúc mừng! Bạn vừa đạt được huy hiệu mới: "${achievementName}"!`, 'success', 8000);
+                    localStorage.setItem(achievementKey, "true");
+                    priorityAlertShown = true;
+                }
             }
         }
 
-        // 3. Nếu không có thông báo ưu tiên nào, hiển thị các thông báo khác
+        // 3. Các thông báo khác
         if (!priorityAlertShown) {
             if (smokeFreeDays > 0) {
-                // Sử dụng toLocaleString để định dạng tiền tệ một cách tự động
                 showAlert(`🎉 Bạn đã không hút thuốc được ${smokeFreeDays} ngày và tiết kiệm được ${moneySaved.toLocaleString('vi-VN')} VND!`, 'info');
             } else if (smokeFreeDays === 0 && latestSmokingLog && latestSmokingLog.cigarettesSmoked > 0) {
                 showAlert(`Bạn đã ghi nhận hút thuốc gần đây. Đừng nản lòng, hãy bắt đầu lại ngay hôm nay!`, 'warning', 10000);
@@ -552,6 +558,8 @@
                 showAlert('Chào mừng bạn! Hãy cập nhật hồ sơ và ghi nhận hoạt động hút thuốc để bắt đầu hành trình của bạn!', 'info', 10000);
             }
         }
+    }
+
 
         // --- Fetch và Vẽ biểu đồ ---
         if (userId) { // Đảm bảo userId tồn tại trước khi gọi API

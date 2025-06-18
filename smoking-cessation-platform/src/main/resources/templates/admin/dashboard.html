@@ -137,6 +137,31 @@
                 </tr>
             </tbody>
         </table>
+
+        <h3 class="section-title">📊 Đánh giá từ người dùng</h3>
+        <p>⭐ Trung bình: <span th:text="${#numbers.formatDecimal(averageStars, 1, 'COMMA', 1, 'POINT')}">0.0</span> sao</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Người dùng</th>
+                    <th>Số sao</th>
+                    <th>Nhận xét</th>
+                    <th>Thời gian</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="rating : ${ratings}">
+                    <td th:text="${rating.user.fullName ?: rating.user.username}">Tên</td>
+                    <td th:text="${rating.stars} + ' ⭐'"></td>
+                    <td th:text="${rating.comment}">Nhận xét</td>
+                    <td th:text="${#temporals.format(rating.submittedAt, 'dd/MM/yyyy HH:mm')}"></td>
+                </tr>
+                <tr th:if="${ratings == null or ratings.isEmpty()}">
+                    <td colspan="4">Chưa có đánh giá nào.</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 </body>
 </html>

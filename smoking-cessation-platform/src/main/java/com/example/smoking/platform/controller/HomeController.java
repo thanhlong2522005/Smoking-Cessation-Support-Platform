@@ -51,6 +51,7 @@ public class HomeController {
 
             // Truyền dữ liệu cho frontend
             model.addAttribute("userId", currentUser.getId()); // Cần cho API JavaScript
+            model.addAttribute("userRole", currentUser.getRole().toString());
             model.addAttribute("user", currentUser); // Đối tượng User đầy đủ
             model.addAttribute("userAchievements", achievementService.getUserAchievements(currentUser));
 

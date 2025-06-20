@@ -37,16 +37,6 @@ public class AdminController {
 
     @GetMapping("/dashboard")
     public String adminDashboard(Model model) {
-        model.addAttribute("users", userService.getAllUsers());
-        model.addAttribute("feedbacks", feedbackService.getAllFeedbacks());
-        model.addAttribute("achievements", achievementService.getAllAchievements());
-        List<User> members = userService.getAllUsers().stream()
-                                    .filter(user -> user.getRole() == UserRole.MEMBER)
-                                    .collect(Collectors.toList());
-        model.addAttribute("members", members);
-
-        model.addAttribute("ratings", ratingService.getAllRatings());
-        model.addAttribute("averageStars", ratingService.calculateAverageStars());
         return "admin/dashboard";
     }
 
@@ -55,7 +45,7 @@ public class AdminController {
     public String markFeedbackAsRead(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         feedbackService.markAsRead(id);
         redirectAttributes.addFlashAttribute("successMessage", "Feedback đã được đánh dấu là đã đọc.");
-        return "redirect:/admin/dashboard";
+        return "redirect:/admin/feedbacks";
     }
 
     // Phương thức để xóa feedback
@@ -63,7 +53,7 @@ public class AdminController {
     public String deleteFeedback(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         feedbackService.deleteFeedback(id);
         redirectAttributes.addFlashAttribute("successMessage", "Feedback đã được xóa.");
-        return "redirect:/admin/dashboard";
+        return "redirect:/admin/feedbacks";
     }
     
     // Hiển thị form tạo huy hiệu mới
@@ -85,7 +75,7 @@ public class AdminController {
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
-        return "redirect:/admin/dashboard"; // Quay lại dashboard
+        return "redirect:/admin/achievements"; // Quay lại dashboard
     }
 
 
@@ -98,6 +88,38 @@ public class AdminController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Không thể xóa huy hiệu: " + e.getMessage());
         }
-        return "redirect:/admin/dashboard";
+        return "redirect:/admin/achievements";
     }
+
+    @GetMapping("/report")
+    public String viewSystemReport() {
+        return "admin/report";
+    }
+
+    @GetMapping("/users")
+    public String viewUsers(Model model) {
+        model.addAttribute("users", userService.getAllUsers());
+        return "admin/users";
+    }
+
+    @GetMapping("/feedbacks")
+    public String viewFeedbacks(Model model) {
+        model.addAttribute("feedbacks", feedbackService.getAllFeedbacks());
+        return "admin/feedbacks";
+    }
+
+    @GetMapping("/achievements")
+    public String viewAchievements(Model model) {
+        model.addAttribute("achievements", achievementService.getAllAchievements());
+        return "admin/achievements";
+    }
+
+    @GetMapping("/ratings")
+    public String viewRatings(Model model) {
+        model.addAttribute("ratings", ratingService.getAllRatings());
+        model.addAttribute("averageStars", ratingService.calculateAverageStars());
+        return "admin/ratings";
+    }
+
+
 }

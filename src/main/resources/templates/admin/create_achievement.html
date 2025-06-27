@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tạo Huy hiệu mới</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+<body>
+    <div class="container">
+        <h2>Tạo Huy hiệu mới</h2>
+
+        <div th:if="${successMessage}" class="message success-message" th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="message error-message" th:text="${errorMessage}"></div>
+
+        <form th:action="@{/admin/achievements}" method="post">
+            <div>
+                <label for="name">Tên Huy hiệu:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div>
+                <label for="description">Mô tả:</label>
+                <textarea id="description" name="description" required></textarea>
+            </div>
+            <div>
+                <label for="iconUrl">URL Icon (tùy chọn):</label>
+                <input type="text" id="iconUrl" name="iconUrl" placeholder="/images/achievements/your_icon.png">
+            </div>
+            <div>
+                <button type="submit">Tạo Huy hiệu</button>
+            </div>
+        </form>
+        <div class="page-actions">
+             <a th:href="@{/admin/dashboard}" class="action-link">⬅ Quay lại Dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

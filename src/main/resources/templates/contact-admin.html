@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Liên hệ Quản trị viên - Nền tảng Hỗ trợ Cai thuốc</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+      }
+      .contact-container {
+        background-color: #fff;
+        padding: 20px 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        width: 400px;
+        text-align: center;
+      }
+      .contact-container h2 {
+        margin-bottom: 20px;
+        color: #333;
+      }
+      .contact-container label {
+        display: block;
+        text-align: left;
+        margin-bottom: 5px;
+        color: #555;
+      }
+      .contact-container input[type="text"],
+      .contact-container select,
+      .contact-container textarea {
+        width: calc(100% - 20px);
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      .contact-container button {
+        width: 100%;
+        padding: 10px;
+        background-color: #17a2b8;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      .contact-container button:hover {
+        background-color: #138496;
+      }
+      .back-link {
+        margin-top: 15px;
+        font-size: 14px;
+      }
+      .back-link a {
+        color: #007bff;
+        text-decoration: none;
+      }
+      .back-link a:hover {
+        text-decoration: underline;
+      }
+      .success-message {
+        color: green;
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="contact-container">
+      <h2>Liên hệ Quản trị viên</h2>
+
+      <div
+        th:if="${message}"
+        class="success-message"
+        th:text="${message}"
+      ></div>
+
+      <form th:action="@{/contact-admin}" method="post">
+        <div>
+          <label for="subject">Chủ đề:</label>
+          <input type="text" id="subject" name="subject" required />
+        </div>
+
+        <div>
+          <label for="type">Loại yêu cầu:</label>
+          <select id="type" name="type" required>
+            <option value="">-- Chọn loại --</option>
+            <option value="support">Yêu cầu hỗ trợ</option>
+            <option value="feedback">Góp ý hệ thống</option>
+            <option value="report">Báo cáo vi phạm</option>
+            <option value="membership">Vấn đề gói thành viên</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="message">Nội dung:</label>
+          <textarea id="message" name="message" rows="5" required></textarea>
+        </div>
+
+        <div>
+          <button type="submit">Gửi yêu cầu</button>
+        </div>
+      </form>
+
+      <div class="back-link">
+        <a th:href="@{/dashboard}">← Quay lại Trang chính</a>
+      </div>
+    </div>
+  </body>
+</html>

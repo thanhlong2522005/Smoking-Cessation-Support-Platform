@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Đánh giá nền tảng</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .rating-container {
+            background-color: #fff;
+            padding: 30px 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #007bff;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1em;
+            resize: vertical;
+            height: 100px;
+        }
+
+        button[type="submit"],
+        .back-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 1em;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .back-btn {
+            background-color: #6c757d;
+            text-align: center;
+            display: block;
+            text-decoration: none;
+            margin-top: 15px;
+        }
+
+        .back-btn:hover {
+            background-color: #5a6268;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #218838;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .star-rating {
+            display: flex;
+            gap: 8px;
+            font-size: 2em;
+            justify-content: center;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        .star {
+            color: #ccc;
+            transition: color 0.2s ease;
+        }
+
+        .star.selected {
+            color: gold;
+        }
+    </style>
+</head>
+<body>
+<div class="rating-container">
+    <h2>🎯 Góp ý và đánh giá nền tảng</h2>
+
+    <!-- Thông báo -->
+    <div th:if="${successMessage}" class="message success-message" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="message error-message" th:text="${errorMessage}"></div>
+
+    <form method="post" th:action="@{/rate}">
+        <div class="form-group">
+            <label>Chọn số sao:</label>
+            <div class="star-rating">
+                <input type="hidden" name="stars" id="stars" required>
+                <span class="star" data-value="1">&#9733;</span>
+                <span class="star" data-value="2">&#9733;</span>
+                <span class="star" data-value="3">&#9733;</span>
+                <span class="star" data-value="4">&#9733;</span>
+                <span class="star" data-value="5">&#9733;</span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="comment">Nhận xét (tùy chọn):</label>
+            <textarea id="comment" name="comment" placeholder="Hãy chia sẻ trải nghiệm của bạn..."></textarea>
+        </div>
+
+        <button type="submit">Gửi đánh giá</button>
+    </form>
+
+    <a th:href="@{/dashboard}" class="back-btn">⬅ Quay về Dashboard</a>
+</div>
+
+<!-- JavaScript xử lý chọn sao -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const stars = document.querySelectorAll(".star");
+        const starsInput = document.getElementById("stars");
+        let selectedRating = 0;
+
+        stars.forEach(star => {
+            star.addEventListener("mouseover", () => {
+                const val = parseInt(star.dataset.value);
+                highlightStars(val);
+            });
+
+            star.addEventListener("mouseout", () => {
+                highlightStars(selectedRating);
+            });
+
+            star.addEventListener("click", () => {
+                selectedRating = parseInt(star.dataset.value);
+                starsInput.value = selectedRating; // Gửi về form
+                highlightStars(selectedRating);
+            });
+        });
+
+        function highlightStars(rating) {
+            stars.forEach(star => {
+                const val = parseInt(star.dataset.value);
+                if (val <= rating) {
+                    star.classList.add("selected");
+                } else {
+                    star.classList.remove("selected");
+                }
+            });
+        }
+    });
+</script>
+</body>
+</html>

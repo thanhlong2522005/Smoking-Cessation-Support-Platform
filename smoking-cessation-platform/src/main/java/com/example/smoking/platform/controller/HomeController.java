@@ -2,24 +2,34 @@ package com.example.smoking.platform.controller;
 
 import com.example.smoking.platform.model.User;
 import com.example.smoking.platform.model.SmokingLog;
+<<<<<<< HEAD
 import com.example.smoking.platform.model.Motivation;
 import com.example.smoking.platform.service.MotivationService;
 import com.example.smoking.platform.service.AchievementService;
 import com.example.smoking.platform.service.SmokingLogService;
 import com.example.smoking.platform.service.UserService;
 
+=======
+import com.example.smoking.platform.service.AchievementService;
+import com.example.smoking.platform.service.SmokingLogService;
+import com.example.smoking.platform.service.UserService;
+>>>>>>> 35c6a47bdb5780cf48015a88cd926b4470d500c2
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+<<<<<<< HEAD
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.security.Principal;
+=======
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+>>>>>>> 35c6a47bdb5780cf48015a88cd926b4470d500c2
 import java.util.Optional;
 
 @Controller
@@ -27,6 +37,7 @@ public class HomeController {
 
     @Autowired
     private UserService userService;
+<<<<<<< HEAD
 
     @Autowired
     private AchievementService achievementService;
@@ -38,6 +49,23 @@ public class HomeController {
     private MotivationService motivationService;
 
     // ✅ Trang chính Dashboard
+=======
+    @Autowired
+    private AchievementService achievementService;
+    @Autowired
+    private SmokingLogService smokingLogService;
+
+    @GetMapping("/")
+    public String index() {
+        return "index"; // Trang chủ giới thiệu
+    }
+
+    @GetMapping("/login")
+    public String login() {
+        return "login"; // Hiển thị trang đăng nhập
+    }
+
+>>>>>>> 35c6a47bdb5780cf48015a88cd926b4470d500c2
     @GetMapping("/dashboard")
     public String dashboard(Model model, RedirectAttributes redirectAttributes) {
         try {
@@ -45,6 +73,10 @@ public class HomeController {
             String currentUsername = authentication.getName();
 
             Optional<User> currentUserOptional = userService.getUserByUsername(currentUsername);
+<<<<<<< HEAD
+=======
+
+>>>>>>> 35c6a47bdb5780cf48015a88cd926b4470d500c2
             if (currentUserOptional.isEmpty()) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Không tìm thấy người dùng.");
                 return "redirect:/login";
@@ -52,6 +84,7 @@ public class HomeController {
 
             User currentUser = currentUserOptional.get();
 
+<<<<<<< HEAD
             // ➕ Dữ liệu người dùng
             model.addAttribute("userId", currentUser.getId());
             model.addAttribute("userRole", currentUser.getRole().toString());
@@ -69,15 +102,34 @@ public class HomeController {
             Motivation quote = motivationService.getRandomMotivation();
             model.addAttribute("quote", quote);
             model.addAttribute("newMotivation", new Motivation());
+=======
+            // Truyền dữ liệu cho frontend
+            model.addAttribute("userId", currentUser.getId()); // Cần cho API JavaScript
+            model.addAttribute("userRole", currentUser.getRole().toString());
+            model.addAttribute("user", currentUser); // Đối tượng User đầy đủ
+            model.addAttribute("userAchievements", achievementService.getUserAchievements(currentUser));
+
+            Optional<SmokingLog> latestLogOptional = smokingLogService.findLatestSmokingLogByUser(currentUser);
+            model.addAttribute("latestSmokingLog", latestLogOptional.orElse(null));
+
+            model.addAttribute("smokeFreeDays", smokingLogService.calculateDaysWithoutSmoking(currentUser));
+            model.addAttribute("moneySaved", smokingLogService.calculateMoneySaved(currentUser));
+            model.addAttribute("healthMilestones", smokingLogService.getHealthProgress(currentUser)); // Từ file 1
+>>>>>>> 35c6a47bdb5780cf48015a88cd926b4470d500c2
 
             return "dashboard";
 
         } catch (Exception e) {
+<<<<<<< HEAD
             e.printStackTrace(); // Log lỗi (nên dùng logger trong production)
+=======
+            e.printStackTrace(); // Ghi log chi tiết lỗi (nên thay bằng logging framework như SLF4J trong production)
+>>>>>>> 35c6a47bdb5780cf48015a88cd926b4470d500c2
             redirectAttributes.addFlashAttribute("errorMessage", "Đã xảy ra lỗi khi tải dashboard.");
             return "redirect:/login";
         }
     }
+<<<<<<< HEAD
 
     // ✅ Gửi lời động viên mới
     @PostMapping("/dashboard/addMotivation")
@@ -132,3 +184,6 @@ public class HomeController {
         return "login";
     }
 }
+=======
+}
+>>>>>>> 35c6a47bdb5780cf48015a88cd926b4470d500c2

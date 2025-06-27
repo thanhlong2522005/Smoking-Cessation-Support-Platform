@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý huy hiệu</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+<body>
+    <div class="container">
+        <h2>🏆 Danh sách huy hiệu</h2>
+        <div class="page-actions">
+            <a th:href="@{/admin/dashboard}" class="action-link">⬅ Quay về Dashboard</a>
+            <a th:href="@{/admin/achievements/new}" class="action-link create">➕ Tạo huy hiệu mới</a>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tên</th>
+                    <th>Mô tả</th>
+                    <th>Icon</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="achievement : ${achievements}">
+                    <td th:text="${achievement.id}"></td>
+                    <td th:text="${achievement.name}"></td>
+                    <td th:text="${achievement.description}"></td>
+                    <td><img th:src="${achievement.iconUrl}" alt="icon" class="icon"/></td>
+                    <td class="action-buttons">
+                        <a th:href="@{/admin/achievements/delete/{id}(id=${achievement.id})}" class="delete">Xóa</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

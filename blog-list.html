@@ -24,6 +24,7 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 30px;
+        flex-wrap: wrap;
       }
 
       .blog-post {
@@ -70,21 +71,93 @@
       .btn-delete {
         margin-top: 10px;
       }
+
+      .form-section {
+        background: #ffffff;
+        border: 1px solid #ddd;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+      }
+
+      textarea {
+        resize: vertical;
+      }
     </style>
   </head>
 
   <body>
     <div class="blog-container">
       <div class="blog-header">
-        <div class="d-flex justify-content-end gap-2 mb-3">
-          <h2>📰 Blog Chia Sẻ Kinh Nghiệm Cai Thuốc</h2>
+        <h2>📰 Blog Chia Sẻ Kinh Nghiệm Cai Thuốc</h2>
+        <div class="d-flex gap-2 mt-2">
           <a class="btn-write" th:href="@{/blogs/write}">📝 Viết bài chia sẻ</a>
-          <a class="btn btn-outline-secondary mt-3" th:href="@{/dashboard}"
+          <a class="btn btn-outline-secondary" th:href="@{/dashboard}"
             >← Về Bảng Điều Khiển</a
           >
         </div>
       </div>
 
+      <!-- ✅ Form Gửi Lời Động Viên -->
+      <div class="form-section">
+        <h5>💌 Gửi lời động viên</h5>
+        <form action="/blog/sendMotivation" method="post">
+          <div class="mb-2">
+            <input
+              type="text"
+              name="receiverUsername"
+              class="form-control"
+              placeholder="Tên người nhận"
+              required
+            />
+          </div>
+          <div class="mb-2">
+            <textarea
+              name="message"
+              class="form-control"
+              rows="3"
+              placeholder="Nhập lời động viên..."
+              required
+            ></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">
+            Gửi lời động viên
+          </button>
+        </form>
+      </div>
+
+      <!-- ✅ Form Chia Sẻ Huy Hiệu -->
+      <div class="form-section">
+        <h5>🏅 Chia sẻ huy hiệu</h5>
+        <form action="/blog/shareAchievement" method="post">
+          <div class="mb-2">
+            <input
+              type="text"
+              name="receiverUsername"
+              class="form-control"
+              placeholder="Tên người nhận"
+              required
+            />
+          </div>
+          <div class="mb-2">
+            <select name="achievementId" class="form-select" required>
+              <option
+                th:each="ach : ${achievements}"
+                th:value="${ach.id}"
+                th:text="${ach.name}"
+              >
+                [Huy hiệu]
+              </option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-success">
+            Chia sẻ huy hiệu
+          </button>
+        </form>
+      </div>
+      <a href="/chat/select" class="btn btn-outline-success mt-3"
+        >💬 Chat với Coach</a
+      >
       <!-- ✅ Thông báo -->
       <div
         th:if="${successMessage}"

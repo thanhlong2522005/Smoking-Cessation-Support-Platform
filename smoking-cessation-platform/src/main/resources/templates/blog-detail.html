@@ -9,83 +9,149 @@
     />
     <style>
       body {
-        font-family: Arial;
-        background-color: #f2f2f2;
-        padding: 20px;
+        font-family: "Segoe UI", sans-serif;
+        background-color: #f8f9fa;
+        padding: 30px;
       }
+
+      .container {
+        max-width: 800px;
+        margin: auto;
+      }
+
       .blog-detail {
         background: white;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.07);
+        margin-bottom: 30px;
       }
+
+      .blog-detail h2 {
+        font-size: 28px;
+        color: #333;
+      }
+
+      .meta-info {
+        color: #666;
+        font-size: 14px;
+      }
+
+      .comment-box,
+      .comment {
+        background: #ffffff;
+        border: 1px solid #dee2e6;
+        padding: 15px;
+        border-radius: 6px;
+        margin-top: 15px;
+      }
+
+      .comment strong {
+        color: #007bff;
+      }
+
       .back-link {
-        margin-top: 20px;
         display: inline-block;
+        margin-top: 20px;
         color: #007bff;
         text-decoration: none;
       }
+
       .back-link:hover {
         text-decoration: underline;
       }
+
+      hr {
+        border-top: 1px solid #dee2e6;
+      }
     </style>
   </head>
+
   <body>
-    <div class="blog-detail">
-      <h2 th:text="${blog.title}"></h2>
-      <p><strong>Tác giả:</strong> <span th:text="${blog.author}"></span></p>
-      <p>
-        <strong>Ngày đăng:</strong>
-        <span
-          th:text="${#temporals.format(blog.createdAt, 'dd/MM/yyyy HH:mm')}"
-        ></span>
-      </p>
-      <hr />
-      <p th:text="${blog.content}"></p>
+    <div class="container">
+      <div class="blog-detail">
+        <h2 th:text="${blog.title}"></h2>
+        <p class="meta-info">
+          ✍️ Tác giả:
+          <span th:text="${blog.author}"></span> | 📅
+          <span
+            th:text="${#temporals.format(blog.createdAt, 'dd/MM/yyyy HH:mm')}"
+          ></span>
+        </p>
+        <hr />
+        <p th:text="${blog.content}"></p>
+
+        <!-- Nếu có chia sẻ huy hiệu -->
+        <div th:if="${blog.achievementShared}" class="mt-4">
+          <strong>🎖 Huy hiệu chia sẻ:</strong>
+          <span th:text="${blog.achievementShared}"></span>
+        </div>
+
+        <!-- Nếu có lời động viên -->
+        <div th:if="${blog.motivationMessage}" class="mt-2">
+          <strong>💬 Lời động viên:</strong>
+          <p th:text="${blog.motivationMessage}"></p>
+        </div>
+
+        <!-- Xóa nếu là tác giả hoặc admin -->
+        <div
+          th:if="${#authentication.name == blog.author or userRole == 'ADMIN'}"
+          class="mt-4"
+        >
+          <a
+            th:href="@{'/blog/delete/' + ${blog.id}}"
+            class="btn btn-sm btn-danger"
+            onclick="return confirm('Bạn chắc chắn muốn xóa bài viết này?')"
+          >
+            🗑 Xóa bài viết
+          </a>
+        </div>
+      </div>
+
+      <!-- Bình luận -->
+      <h4>💬 Bình luận</h4>
+
+      <!-- Thông báo -->
+      <div
+        th:if="${commentSuccess}"
+        class="alert alert-success"
+        th:text="${commentSuccess}"
+      ></div>
+      <div
+        th:if="${errorMessage}"
+        class="alert alert-danger"
+        th:text="${errorMessage}"
+      ></div>
+
+      <!-- Form bình luận -->
+      <form
+        th:action="@{'/blogs/' + ${blog.id} + '/comment'}"
+        method="post"
+        th:object="${newComment}"
+        class="comment-box"
+      >
+        <textarea
+          th:field="*{content}"
+          rows="3"
+          required
+          class="form-control"
+          placeholder="Viết bình luận của bạn..."
+        ></textarea>
+        <button type="submit" class="btn btn-primary mt-2">
+          Gửi bình luận
+        </button>
+      </form>
+
+      <!-- Danh sách bình luận -->
+      <div th:each="c : ${comments}" class="comment">
+        <p>
+          <strong th:text="${c.author}"></strong> |
+          <small
+            th:text="${#temporals.format(c.createdAt, 'dd/MM/yyyy HH:mm')}"
+          ></small>
+        </p>
+        <p th:text="${c.content}"></p>
+      </div>
     </div>
-
-    <hr />
-    <h3>Bình luận</h3>
-
-    <!-- Thông báo -->
-    <div
-      th:if="${commentSuccess}"
-      class="alert alert-success"
-      th:text="${commentSuccess}"
-    ></div>
-    <div
-      th:if="${errorMessage}"
-      class="alert alert-danger"
-      th:text="${errorMessage}"
-    ></div>
-
-    <!-- Form bình luận -->
-    <form
-      th:action="@{'/blogs/' + ${blog.id} + '/comment'}"
-      method="post"
-      th:object="${newComment}"
-    >
-      <textarea
-        th:field="*{content}"
-        rows="3"
-        required
-        placeholder="Viết bình luận..."
-        class="form-control"
-      ></textarea>
-      <button type="submit" class="btn btn-primary mt-2">Gửi bình luận</button>
-    </form>
-
-    <!-- Danh sách bình luận -->
-    <div th:each="c : ${comments}" class="mt-3 p-3 bg-light rounded">
-      <p>
-        <strong th:text="${c.author}"></strong> -
-        <span
-          th:text="${#temporals.format(c.createdAt, 'dd/MM/yyyy HH:mm')}"
-        ></span>
-      </p>
-      <p th:text="${c.content}"></p>
-    </div>
-
-    <a class="back-link" th:href="@{/blogs}">← Quay lại danh sách</a>
   </body>
 </html>

@@ -1,111 +1,280 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chào mừng đến với Nền tảng Hỗ trợ Cai thuốc lá</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f2f5;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            text-align: center;
-        }
-        .container {
-            background-color: #ffffff;
-            padding: 40px 60px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
-            width: 90%;
-        }
-        h1 {
-            color: #333;
-            font-size: 2.5em;
-            margin-bottom: 20px;
-        }
-        p {
-            color: #666;
-            font-size: 1.1em;
-            line-height: 1.6;
-            margin-bottom: 25px;
-        }
-        .button-group a {
-            display: inline-block;
-            background-color: #007bff;
-            color: white;
-            padding: 12px 25px;
-            border-radius: 5px;
-            text-decoration: none;
-            font-weight: bold;
-            transition: background-color 0.3s ease;
-            margin: 0 10px;
-        }
-        .button-group a:hover {
-            background-color: #0056b3;
-        }
-        .button-group a.secondary {
-            background-color: #6c757d;
-        }
-        .button-group a.secondary:hover {
-            background-color: #5a6268;
-        }
-        .logged-in-message {
-            margin-top: 30px;
-            font-size: 1.1em;
-            color: #007bff;
-            font-weight: bold;
-        }
-        .logged-in-message form {
-            display: inline-block;
-            margin-left: 10px;
-        }
-        .logged-in-message button {
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1em;
-            transition: background-color 0.3s ease;
-        }
-        .logged-in-message button:hover {
-            background-color: #c82333;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quit Smoking - Hành Trình Cai Thuốc Lá</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f8f9fa;
+    }
+
+    .hero {
+      background: linear-gradient(90deg, #f1f5f9 0%, #ffffff 100%);
+      padding: 5rem 0;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      transition: transform 0.3s ease-in-out;
+    }
+
+    footer ul {
+      padding-left: 0;
+      list-style: none;
+    }
+
+    footer h6 {
+      border-bottom: 2px solid #dc3545;
+      display: inline-block;
+      margin-bottom: 1rem;
+    }
+
+    .navbar {
+      background-color: #ffffff;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-link:hover {
+      color: #dc3545 !important;
+    }
+
+    .btn-primary {
+      background-color: #dc3545;
+      border-color: #dc3545;
+    }
+
+    .btn-primary:hover {
+      background-color: #c82333;
+      border-color: #c82333;
+    }
+
+    .feature-icon {
+      font-size: 3rem;
+      color: #dc3545;
+    }
+
+    .blog-card img {
+      height: 200px;
+      object-fit: cover;
+    }
+
+    .blog-card .card-body {
+      height: 220px;
+      overflow: hidden;
+    }
+
+    @media (max-width: 768px) {
+      .hero img {
+        margin-top: 2rem;
+      }
+      .blog-card .card-body {
+        height: auto;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Chào mừng bạn đến với Nền tảng Hỗ trợ Cai thuốc lá!</h1>
-        <p>Hành trình bỏ thuốc của bạn bắt đầu từ đây. Chúng tôi cung cấp các công cụ và tài nguyên để giúp bạn đạt được mục tiêu sống khỏe mạnh hơn.</p>
-
-        <div sec:authorize="isAuthenticated()">
-            <div class="logged-in-message">
-                Xin chào, <span sec:authentication="name"></span>!
-                Bạn đã đăng nhập.
-                <div class="button-group" style="margin-top: 15px;">
-                    <a th:href="@{/dashboard}">Đi đến Bảng Điều khiển</a>
-                    <a th:if="${#authorization.expression('hasRole(''ADMIN'')')}" th:href="@{/admin/dashboard}" class="secondary">Đi đến Admin Dashboard</a>
-                </div>
-                <form th:action="@{/logout}" method="post" style="margin-top: 20px;">
-                    <button type="submit">Đăng xuất</button>
-                </form>
-            </div>
-        </div>
-
-        <div sec:authorize="isAnonymous()">
-            <p>Tham gia cộng đồng của chúng tôi ngay hôm nay để bắt đầu hành trình cai thuốc của bạn.</p>
-            <div class="button-group">
-                <a th:href="@{/login}">Đăng nhập</a>
-                <a th:href="@{/register}" class="secondary">Đăng ký</a>
-            </div>
-        </div>
+  <!-- Header -->
+  <header class="navbar sticky-top">
+    <div class="container d-flex justify-content-between align-items-center py-3">
+      <h2 class="text-danger fw-bold"><i class="bi bi-lungs"></i> Quit Smoking</h2>
+      <nav>
+        <ul class="nav">
+          <li class="nav-item"><a class="nav-link active text-danger fw-bold" href="#">Trang Chủ</a></li>
+          <li class="nav-item"><a class="nav-link" href="#about">Giới Thiệu</a></li>
+          <li class="nav-item"><a class="nav-link" href="#features">Tính Năng</a></li>
+          <li class="nav-item"><a class="nav-link" href="#blog">Blog</a></li>
+          <li class="nav-item"><a class="nav-link" href="#contact">Liên Hệ</a></li>
+          <li class="nav-item"><a class="nav-link" href="/login">Đăng Nhập</a></li>
+          <li class="nav-item"><a class="nav-link btn btn-primary text-white" href="/register">Đăng Ký</a></li>
+        </ul>
+      </nav>
     </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero" id="hero">
+    <div class="container d-flex flex-wrap align-items-center">
+      <div class="col-md-6">
+        <p class="text-uppercase text-danger fw-bold">Hành Trình Cai Thuốc Lá</p>
+        <h1 class="display-5 fw-bold">Bắt Đầu Cuộc Sống <br /> Khỏe Mạnh Hôm Nay</h1>
+        <p class="text-muted">
+          Tham gia cùng chúng tôi để từ bỏ thuốc lá với các công cụ hỗ trợ, kế hoạch cá nhân hóa và sự đồng hành từ các huấn luyện viên.
+        </p>
+        <div>
+          <a href="/register" class="btn btn-primary me-3">Đăng Ký Ngay</a>
+          <a href="/login" class="btn btn-outline-primary">Đăng Nhập</a>
+        </div>
+      </div>
+      <div class="col-md-6 text-center">
+        <img src="https://via.placeholder.com/400x400?text=Healthy+Lungs" alt="Healthy Lungs" class="img-fluid rounded" />
+      </div>
+    </div>
+  </section>
+
+  <!-- Info Boxes -->
+  <section class="info-boxes py-4" id="features">
+    <div class="container d-flex flex-wrap justify-content-between">
+      <div class="card col-md-3 p-3 m-2 shadow">
+        <i class="bi bi-chat-square-text feature-icon mb-3"></i>
+        <h6 class="text-primary">Hỗ Trợ 24/7</h6>
+        <h5>Trò Chuyện Với Coach</h5>
+        <p>Nhận sự hỗ trợ liên tục từ các huấn luyện viên chuyên nghiệp để giữ động lực trong hành trình cai thuốc.</p>
+      </div>
+      <div class="card col-md-3 p-3 m-2 shadow">
+        <i class="bi bi-graph-up feature-icon mb-3"></i>
+        <h6 class="text-primary">Theo Dõi Tiến Trình</h6>
+        <h5>Biểu Đồ Trực Quan</h5>
+        <p>Xem số ngày không hút thuốc và tiền tiết kiệm được qua các biểu đồ dễ hiểu.</p>
+      </div>
+      <div class="card col-md-3 p-3 m-2 shadow">
+        <i class="bi bi-trophy feature-icon mb-3"></i>
+        <h6 class="text-primary">Thành Tích</h6>
+        <h5>Huy Hiệu Thưởng</h5>
+        <p>Đạt được các huy hiệu khi hoàn thành các cột mốc quan trọng trong hành trình cai thuốc.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Blog Section -->
+  <section class="py-5 bg-light" id="blog">
+    <div class="container">
+      <h2 class="fw-bold text-primary text-center mb-3">Câu Chuyện & Mẹo Cai Thuốc Lá</h2>
+      <p class="text-muted text-center mb-5">
+        Khám phá những câu chuyện truyền cảm hứng và mẹo thực tế giúp bạn bắt đầu hành trình cai thuốc lá ngay hôm nay!
+      </p>
+      <div class="row">
+        <div class="col-md-4 mb-4">
+          <div class="card blog-card shadow h-100">
+            <img src="../static/images/OIP (2).jpg" alt="Description of image 1">
+            <div class="card-body">
+              <h5 class="card-title">Hành Trình 30 Ngày Không Thuốc Lá</h5>
+              <p class="card-text">
+                Anh Minh, 35 tuổi, đã từ bỏ thuốc lá sau 10 năm nghiện. "Tôi bắt đầu với kế hoạch nhỏ, theo dõi tiến trình mỗi ngày, và nhờ sự hỗ trợ từ coach, tôi đã làm được!" 
+              </p>
+              <a href="/register" class="btn btn-primary btn-sm">Bắt Đầu Ngay</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-4">
+          <div class="card blog-card shadow h-100">
+            <img src="../static/images/images.jpg" class="card-img-top" alt="Healthy Tips" />
+            <div class="card-body">
+              <h5 class="card-title">5 Mẹo Giúp Bạn Cai Thuốc Lá Thành Công</h5>
+              <p class="card-text">
+                Từ việc thay đổi thói quen hàng ngày đến tìm kiếm sự hỗ trợ từ cộng đồng, những mẹo này sẽ giúp bạn vượt qua cơn thèm thuốc một cách dễ dàng hơn.
+              </p>
+              <a href="/register" class="btn btn-primary btn-sm">Tham Gia Ngay</a>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-4">
+          <div class="card blog-card shadow h-100">
+            <img src="../static/images/images (1).jpg" class="card-img-top" alt="Health Benefits" />
+            <div class="card-body">
+              <h5 class="card-title">Lợi Ích Sức Khỏe Khi Cai Thuốc Lá</h5>
+              <p class="card-text">
+                Chỉ sau 1 tuần không hút thuốc, phổi của bạn bắt đầu phục hồi, huyết áp ổn định hơn, và bạn sẽ cảm nhận được sự khác biệt rõ rệt!
+              </p>
+              <a href="/register" class="btn btn-primary btn-sm">Đăng Ký Ngay</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section class="py-5" id="about">
+    <div class="container">
+      <h2 class="fw-bold text-primary text-center mb-3">Về Quit Smoking</h2>
+      <p class="text-muted text-center mb-5">
+        Quit Smoking là nền tảng hỗ trợ bạn từ bỏ thuốc lá với các công cụ hiện đại, kế hoạch cá nhân hóa và sự đồng hành từ cộng đồng. 
+        Chúng tôi giúp bạn theo dõi tiến trình, cải thiện sức khỏe và đạt được các mục tiêu sống lành mạnh.
+      </p>
+      <div class="row">
+        <div class="col-md-4 mb-4">
+          <div class="card p-3 shadow h-100">
+            <i class="bi bi-lungs-fill display-6 text-danger mb-3"></i>
+            <h5>Cải Thiện Sức Khỏe</h5>
+            <p class="text-muted">Theo dõi các cột mốc sức khỏe như cải thiện hô hấp và giảm nguy cơ bệnh tim.</p>
+          </div>
+        </div>
+        <div class="col-md-4 mb-4">
+          <div class="card p-3 shadow h-100">
+            <i class="bi bi-wallet display-6 text-danger mb-3"></i>
+            <h5>Tiết Kiệm Chi Phí</h5>
+            <p class="text-muted">Xem số tiền bạn tiết kiệm được từ việc không mua thuốc lá.</p>
+          </div>
+        </div>
+        <div class="col-md-4 mb-4">
+          <div class="card p-3 shadow h-100">
+            <i class="bi bi-people display-6 text-danger mb-3"></i>
+            <h5>Cộng Đồng Hỗ Trợ</h5>
+            <p class="text-muted">Kết nối với những người cùng mục tiêu để chia sẻ kinh nghiệm và động lực.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Call to Action -->
+  <section class="py-5 text-center">
+    <div class="container">
+      <h2 class="fw-bold text-primary mb-3">Sẵn Sàng Bắt Đầu?</h2>
+      <p class="text-muted mb-4">Hãy tham gia ngay hôm nay để bắt đầu hành trình cai thuốc lá và sống khỏe mạnh hơn!</p>
+      <a href="/register" class="btn btn-primary btn-lg">Đăng Ký Ngay</a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-white pt-5 mt-5 border-top" id="contact">
+    <div class="container">
+      <div class="row text-muted">
+        <div class="col-md-3 mb-3">
+          <h4 class="text-danger fw-bold">Quit Smoking</h4>
+          <p>Hỗ trợ bạn từ bỏ thuốc lá với các công cụ, kế hoạch và động lực để sống khỏe mạnh hơn.</p>
+          <div class="d-flex">
+            <a href="#" class="me-2 text-dark"><i class="bi bi-facebook"></i></a>
+            <a href="#" class="me-2 text-dark"><i class="bi bi-twitter"></i></a>
+            <a href="#" class="me-2 text-dark"><i class="bi bi-linkedin"></i></a>
+          </div>
+        </div>
+        <div class="col-md-3 mb-3">
+          <h6 class="fw-bold">Dịch Vụ</h6>
+          <ul class="mt-2">
+            <li>Lập Kế Hoạch Cai Thuốc</li>
+            <li>Theo Dõi Sức Khỏe</li>
+            <li>Hỗ Trợ Từ Coach</li>
+            <li>Blog Chia Sẻ</li>
+            <li>Phản Hồi</li>
+          </ul>
+        </div>
+        <div class="col-md-3 mb-3">
+          <h6 class="fw-bold">Hỗ Trợ</h6>
+          <ul class="mt-2">
+            <li>Điều Khoản & Điều Kiện</li>
+            <li>Chính Sách Bảo Mật</li>
+            <li>Hỗ Trợ Cộng Đồng</li>
+            <li>Câu Hỏi Thường Gặp</li>
+            <li>Giấy Phép</li>
+          </ul>
+        </div>
+        <div class="col-md-3 mb-3">
+          <h6 class="fw-bold">Liên Hệ</h6>
+          <p class="mb-1"><i class="bi bi-envelope"></i> support@quitsmoking.com</p>
+          <p class="mb-1"><i class="bi bi-clock"></i> Thứ 2 - Thứ 6: 08:30 - 18:00</p>
+          <p class="fw-bold"><i class="bi bi-telephone"></i> +84-123-456-789</p>
+        </div>
+      </div>
+      <div class="text-center text-muted py-3 border-top mt-4">
+        <small>Copyright © 2025, Designed & Developed by <span class="text-danger">Quit Smoking Team</span></small>
+      </div>
+    </div>
+  </footer>
 </body>
 </html>

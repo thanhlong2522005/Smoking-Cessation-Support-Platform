@@ -1,1415 +1,682 @@
 <!DOCTYPE html>
-<<<<<<< HEAD
-<html
-  lang="en"
-  xmlns:th="http://www.thymeleaf.org"
-  xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
->
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard Người Dùng</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-      /* ... (CSS của bạn giữ nguyên) ... */
-      body {
-        font-family: Arial, sans-serif;
-        background-color: #f4f7f6;
-        margin: 0;
-        padding: 0;
-        color: #333;
-      }
-
-      .navbar {
-        background-color: #007bff;
-        color: white;
-        padding: 15px 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-      }
-
-      .navbar .logo {
-        color: white;
-        text-decoration: none;
-        font-size: 1.5em;
-        font-weight: bold;
-      }
-
-      .navbar .nav-links {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        display: flex;
-      }
-
-      .navbar .nav-links li {
-        margin-right: 25px;
-      }
-
-      .navbar .nav-links a {
-        color: white;
-        text-decoration: none;
-        font-size: 1.1em;
-        transition: color 0.3s ease;
-      }
-
-      .navbar .nav-links a:hover {
-        color: #e0e0e0;
-      }
-
-      .main-content {
-        padding: 20px;
-        max-width: 1200px;
-        margin: 20px auto;
-        background-color: #ffffff;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-      }
-
-      h1,
-      h2 {
-        color: #007bff;
-        text-align: center;
-        margin-bottom: 25px;
-      }
-
-      .dashboard-sections {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 20px;
-        margin-top: 30px;
-      }
-
-      .card {
-        background-color: #f8f9fa;
-        border: 1px solid #e2e6ea;
-        border-radius: 8px;
-        padding: 20px;
-        box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
-        text-align: center;
-      }
-
-      .card h3 {
-        color: #0056b3;
-        margin-bottom: 15px;
-        font-size: 1.4em;
-      }
-
-      .card p {
-        font-size: 1.1em;
-        color: #555;
-        line-height: 1.6;
-      }
-
-      .card .highlight {
-        font-size: 1.6em;
-        font-weight: bold;
-        color: #28a745; /* Green for positive numbers */
-      }
-
-      .action-buttons {
-        text-align: center;
-        margin-top: 30px;
-      }
-
-      .action-buttons a,
-      .action-buttons button {
-        display: inline-block;
-        background-color: #28a745;
-        color: white;
-        padding: 12px 25px;
-        border-radius: 5px;
-        text-decoration: none;
-        font-size: 1.1em;
-        margin: 0 10px;
-        transition: background-color 0.3s ease;
-        border: none;
-        cursor: pointer;
-      }
-
-      .action-buttons a:hover,
-      .action-buttons button:hover {
-        background-color: #218838;
-      }
-
-      .action-buttons .btn-secondary {
-        background-color: #6c757d;
-      }
-
-      .action-buttons .btn-secondary:hover {
-        background-color: #5a6268;
-      }
-
-      .logout-form {
-        display: inline-block;
-        margin-left: 20px;
-      }
-
-      .logout-form button {
-        background-color: #dc3545;
-        color: white;
-        border: none;
-        padding: 8px 15px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 1em;
-      }
-
-      .logout-form button:hover {
-        background-color: #c82333;
-      }
-
-      .achievements-section {
-        margin-top: 40px;
-        padding-top: 20px;
-        border-top: 1px solid #eee;
-      }
-
-      .achievements-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 15px;
-        margin-top: 20px;
-      }
-
-      .achievement-item {
-        background-color: #e9f5ff;
-        border: 1px solid #cce5ff;
-        border-radius: 8px;
-        padding: 15px;
-        text-align: center;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-      }
-
-      .achievement-item:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-      }
-
-      .achievement-item img {
-        width: 60px;
-        height: 60px;
-        margin-bottom: 10px;
-        object-fit: contain;
-      }
-
-      .achievement-item h4 {
-        font-size: 1.1em;
-        color: #0056b3;
-        margin-bottom: 5px;
-      }
-
-      .achievement-item p {
-        font-size: 0.9em;
-        color: #666;
-      }
-
-      /* Styles cho Alert Popup */
-      .alert-popup {
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        padding: 15px 30px;
-        border-radius: 8px;
-        color: white;
-        font-weight: bold;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        z-index: 1000;
-        opacity: 0;
-        visibility: hidden;
-        transition: opacity 0.5s ease, visibility 0.5s ease;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-
-      .alert-popup.show {
-        opacity: 1;
-        visibility: visible;
-      }
-
-      .alert-popup.success {
-        background-color: #28a745; /* Green */
-      }
-
-      .alert-popup.error {
-        background-color: #dc3545; /* Red */
-      }
-
-      .alert-popup.info {
-        background-color: #007bff; /* Blue */
-      }
-
-      .alert-popup.warning {
-        background-color: #ffc107; /* Yellow */
-        color: #333;
-      }
-
-      .alert-popup .close-btn {
-        background: none;
-        border: none;
-        color: white;
-        font-size: 1.5em;
-        cursor: pointer;
-        margin-left: 15px;
-        padding: 0 5px;
-        line-height: 1;
-      }
-      .alert-popup.warning .close-btn {
-        color: #333;
-      }
-
-      /* Chart Styles */
-      .chart-container {
-        width: 100%;
-        max-width: 800px;
-        margin: 40px auto;
-        padding: 20px;
-        background-color: #f8f9fa;
-        border: 1px solid #e2e6ea;
-        border-radius: 8px;
-        box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
-      }
-
-      /* BỔ SUNG CSS cho phần sức khỏe */
-      .health-progress-section {
-        margin-top: 40px;
-        padding-top: 20px;
-        border-top: 1px solid #eee;
-      }
-
-      .health-milestones-list {
-        list-style: none;
-        padding: 0;
-        display: grid;
-        grid-template-columns: repeat(
-          auto-fit,
-          minmax(280px, 1fr)
-        ); /* 2-3 cột trên màn hình lớn */
-        gap: 15px;
-        margin-top: 20px;
-      }
-
-      .health-milestone-item {
-        background-color: #fff;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        padding: 15px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-        display: flex;
-        align-items: flex-start;
-        gap: 10px;
-        flex-direction: column; /* Đổi thành cột để nội dung rõ ràng hơn */
-      }
-
-      .health-milestone-item.achieved {
-        border-left: 5px solid #28a745; /* Green border for achieved */
-        background-color: #e6ffe6; /* Light green background */
-      }
-
-      .health-milestone-item.pending {
-        border-left: 5px solid #ffc107; /* Yellow/orange border for pending */
-        background-color: #fffacd; /* Light yellow background */
-      }
-
-      .health-milestone-item .icon {
-        font-size: 2.5em; /* Tăng kích thước icon */
-        line-height: 1;
-        color: #6c757d; /* Default icon color */
-        margin-bottom: 10px; /* Thêm khoảng cách dưới icon */
-      }
-
-      .health-milestone-item.achieved .icon {
-        color: #28a745; /* Green for achieved */
-      }
-
-      .health-milestone-item.pending .icon {
-        color: #ffc107; /* Yellow/orange for pending */
-      }
-
-      .health-milestone-item h4 {
-        margin: 0 0 5px 0;
-        font-size: 1.2em; /* Tăng kích thước tiêu đề */
-        color: #0056b3;
-      }
-
-      .health-milestone-item p {
-        margin: 0;
-        font-size: 0.95em; /* Tăng kích thước mô tả */
-        color: #555;
-        line-height: 1.5;
-      }
-
-      /* Responsive adjustments */
-      @media (max-width: 768px) {
-        .dashboard-sections,
-        .health-milestones-list,
-        .achievements-grid {
-          grid-template-columns: 1fr; /* Stack columns on smaller screens */
-        }
-        .navbar .nav-links {
-          flex-direction: column;
-          align-items: flex-end;
-        }
-        .navbar .nav-links li {
-          margin: 5px 0;
-        }
-        .alert-popup {
-          width: 90%;
-          left: 5%;
-          transform: translateX(0);
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <nav class="navbar">
-      <a th:href="@{/}" class="logo">Quit Smoking</a>
-      <!-- Lời động viên hiển thị -->
-      <div
-        class="motivational-quote"
-        style="
-          background-color: #eaf6ff;
-          padding: 20px;
-          border-left: 5px solid #007bff;
-          margin: 20px 0;
-          border-radius: 8px;
-        "
-      >
-        <p
-          style="font-size: 18px; font-style: italic; color: #333"
-          th:text="|“${quote.message}”|"
-        ></p>
-        <p
-          style="text-align: right; font-weight: bold; color: #007bff"
-          th:text="'– ' + ${quote.author}"
-        ></p>
-      </div>
-      <!-- Nút hiện form -->
-      <button
-        onclick="toggleForm()"
-        style="
-          background-color: #28a745;
-          color: white;
-          padding: 8px 16px;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-        "
-      >
-        + Gửi lời động viên
-      </button>
-
-      <!-- Form ẩn -->
-      <div id="motivationForm" style="display: none; margin-top: 15px">
-        <form
-          th:action="@{/dashboard/addMotivation}"
-          method="post"
-          th:object="${newMotivation}"
-        >
-          <textarea
-            th:field="*{message}"
-            rows="3"
-            placeholder="Nhập lời động viên..."
-            style="width: 100%; padding: 10px; border-radius: 5px"
-            required
-          ></textarea
-          ><br />
-          <button
-            type="submit"
-            style="
-              margin-top: 8px;
-              padding: 8px 16px;
-              background-color: #007bff;
-              color: white;
-              border: none;
-              border-radius: 4px;
-            "
-          >
-            Gửi
-          </button>
-        </form>
-      </div>
-
-      <script>
-        function toggleForm() {
-          const form = document.getElementById("motivationForm");
-          form.style.display = form.style.display === "none" ? "block" : "none";
-        }
-      </script>
-      <ul class="nav-links">
-        <li><a th:href="@{/dashboard}">Dashboard</a></li>
-        <li><a th:href="@{/user-profile}">Hồ Sơ Của Tôi</a></li>
-        <li><a th:href="@{/membership}">Gói Thành Viên</a></li>
-        <li><a th:href="@{/chat}">Chat với Huấn Luyện Viên</a></li>
-=======
-<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Người Dùng</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        /* ... (CSS của bạn giữ nguyên) ... */
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f7f6;
-            margin: 0;
-            padding: 0;
-            color: #333;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quit Smoking Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f8f9fa;
+    }
 
-        .navbar {
-            background-color: #007bff;
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
+    .hero {
+      background: linear-gradient(90deg, #f1f5f9 0%, #ffffff 100%);
+      padding: 5rem 0;
+    }
 
-        .navbar .logo {
-            color: white;
-            text-decoration: none;
-            font-size: 1.5em;
-            font-weight: bold;
-        }
+    .card:hover {
+      transform: translateY(-5px);
+      transition: transform 0.3s ease-in-out;
+    }
 
-        .navbar .nav-links {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-        }
+    footer ul {
+      padding-left: 0;
+      list-style: none;
+    }
 
-        .navbar .nav-links li {
-            margin-right: 25px;
-        }
+    footer h6 {
+      border-bottom: 2px solid #dc3545;
+      display: inline-block;
+      margin-bottom: 1rem;
+    }
 
-        .navbar .nav-links a {
-            color: white;
-            text-decoration: none;
-            font-size: 1.1em;
-            transition: color 0.3s ease;
-        }
+    .navbar {
+      background-color: #ffffff;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
 
-        .navbar .nav-links a:hover {
-            color: #e0e0e0;
-        }
+    .nav-link:hover {
+      color: #dc3545 !important;
+    }
 
-        .main-content {
-            padding: 20px;
-            max-width: 1200px;
-            margin: 20px auto;
-            background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        }
+    .alert-popup {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 15px 30px;
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
-        h1, h2 {
-            color: #007bff;
-            text-align: center;
-            margin-bottom: 25px;
-        }
+    .alert-popup.show {
+      opacity: 1;
+      visibility: visible;
+    }
 
-        .dashboard-sections {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 30px;
-        }
+    .alert-popup.success {
+      background-color: #28a745;
+    }
 
-        .card {
-            background-color: #f8f9fa;
-            border: 1px solid #e2e6ea;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
-            text-align: center;
-        }
+    .alert-popup.error {
+      background-color: #dc3545;
+    }
 
-        .card h3 {
-            color: #0056b3;
-            margin-bottom: 15px;
-            font-size: 1.4em;
-        }
+    .alert-popup.info {
+      background-color: #007bff;
+    }
 
-        .card p {
-            font-size: 1.1em;
-            color: #555;
-            line-height: 1.6;
-        }
+    .alert-popup.warning {
+      background-color: #ffc107;
+      color: #333;
+    }
 
-        .card .highlight {
-            font-size: 1.6em;
-            font-weight: bold;
-            color: #28a745; /* Green for positive numbers */
-        }
+    .alert-popup .close-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.5em;
+      cursor: pointer;
+      margin-left: 15px;
+      padding: 0 5px;
+      line-height: 1;
+    }
 
-        .action-buttons {
-            text-align: center;
-            margin-top: 30px;
-        }
+    .alert-popup.warning .close-btn {
+      color: #333;
+    }
 
-        .action-buttons a, .action-buttons button {
-            display: inline-block;
-            background-color: #28a745;
-            color: white;
-            padding: 12px 25px;
-            border-radius: 5px;
-            text-decoration: none;
-            font-size: 1.1em;
-            margin: 0 10px;
-            transition: background-color 0.3s ease;
-            border: none;
-            cursor: pointer;
-        }
+    .chart-container {
+      background-color: #ffffff;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+      margin: 40px auto;
+    }
 
-        .action-buttons a:hover, .action-buttons button:hover {
-            background-color: #218838;
-        }
+    .health-milestone-item {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      flex-direction: column;
+    }
 
-        .action-buttons .btn-secondary {
-            background-color: #6c757d;
-        }
+    .health-milestone-item.achieved {
+      border-left: 5px solid #28a745;
+      background-color: #e6ffe6;
+    }
 
-        .action-buttons .btn-secondary:hover {
-            background-color: #5a6268;
-        }
+    .health-milestone-item.pending {
+      border-left: 5px solid #ffc107;
+      background-color: #fffacd;
+    }
 
-        .logout-form {
-            display: inline-block;
-            margin-left: 20px;
-        }
+    .health-milestone-item .icon {
+      font-size: 2.5em;
+      color: #6c757d;
+      margin-bottom: 10px;
+    }
 
-        .logout-form button {
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1em;
-        }
+    .health-milestone-item.achieved .icon {
+      color: #28a745;
+    }
 
-        .logout-form button:hover {
-            background-color: #c82333;
-        }
+    .health-milestone-item.pending .icon {
+      color: #ffc107;
+    }
 
-        .achievements-section {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-        }
+    @media (max-width: 768px) {
+      .health-milestones-list,
+      .achievements-grid {
+        grid-template-columns: 1fr;
+      }
+      .alert-popup {
+        width: 90%;
+        left: 5%;
+        transform: translateX(0);
+      }
+    }
+    .chart-container {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+}
 
-        .achievements-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
+.chart-container canvas {
+  width: 100% !important;
+  height: 300px !important;
+  max-height: 400px;
+}
 
-        .achievement-item {
-            background-color: #e9f5ff;
-            border: 1px solid #cce5ff;
-            border-radius: 8px;
-            padding: 15px;
-            text-align: center;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .achievement-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .achievement-item img {
-            width: 60px;
-            height: 60px;
-            margin-bottom: 10px;
-            object-fit: contain;
-        }
-
-        .achievement-item h4 {
-            font-size: 1.1em;
-            color: #0056b3;
-            margin-bottom: 5px;
-        }
-
-        .achievement-item p {
-            font-size: 0.9em;
-            color: #666;
-        }
-
-        /* Styles cho Alert Popup */
-        .alert-popup {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 15px 30px;
-            border-radius: 8px;
-            color: white;
-            font-weight: bold;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .alert-popup.show {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .alert-popup.success {
-            background-color: #28a745; /* Green */
-        }
-
-        .alert-popup.error {
-            background-color: #dc3545; /* Red */
-        }
-
-        .alert-popup.info {
-            background-color: #007bff; /* Blue */
-        }
-
-        .alert-popup.warning {
-            background-color: #ffc107; /* Yellow */
-            color: #333;
-        }
-
-        .alert-popup .close-btn {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.5em;
-            cursor: pointer;
-            margin-left: 15px;
-            padding: 0 5px;
-            line-height: 1;
-        }
-        .alert-popup.warning .close-btn {
-            color: #333;
-        }
-
-        /* Chart Styles */
-        .chart-container {
-            width: 100%;
-            max-width: 800px;
-            margin: 40px auto;
-            padding: 20px;
-            background-color: #f8f9fa;
-            border: 1px solid #e2e6ea;
-            border-radius: 8px;
-            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
-        }
-
-        /* BỔ SUNG CSS cho phần sức khỏe */
-        .health-progress-section {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-        }
-
-        .health-milestones-list {
-            list-style: none;
-            padding: 0;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* 2-3 cột trên màn hình lớn */
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .health-milestone-item {
-            background-color: #fff;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            flex-direction: column; /* Đổi thành cột để nội dung rõ ràng hơn */
-        }
-
-        .health-milestone-item.achieved {
-            border-left: 5px solid #28a745; /* Green border for achieved */
-            background-color: #e6ffe6; /* Light green background */
-        }
-
-        .health-milestone-item.pending {
-            border-left: 5px solid #ffc107; /* Yellow/orange border for pending */
-            background-color: #fffacd; /* Light yellow background */
-        }
-
-        .health-milestone-item .icon {
-            font-size: 2.5em; /* Tăng kích thước icon */
-            line-height: 1;
-            color: #6c757d; /* Default icon color */
-            margin-bottom: 10px; /* Thêm khoảng cách dưới icon */
-        }
-
-        .health-milestone-item.achieved .icon {
-            color: #28a745; /* Green for achieved */
-        }
-
-        .health-milestone-item.pending .icon {
-            color: #ffc107; /* Yellow/orange for pending */
-        }
-
-        .health-milestone-item h4 {
-            margin: 0 0 5px 0;
-            font-size: 1.2em; /* Tăng kích thước tiêu đề */
-            color: #0056b3;
-        }
-
-        .health-milestone-item p {
-            margin: 0;
-            font-size: 0.95em; /* Tăng kích thước mô tả */
-            color: #555;
-            line-height: 1.5;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .dashboard-sections, .health-milestones-list, .achievements-grid {
-                grid-template-columns: 1fr; /* Stack columns on smaller screens */
-            }
-            .navbar .nav-links {
-                flex-direction: column;
-                align-items: flex-end;
-            }
-            .navbar .nav-links li {
-                margin: 5px 0;
-            }
-            .alert-popup {
-                width: 90%;
-                left: 5%;
-                transform: translateX(0);
-            }
-        }
-    </style>
+  </style>
 </head>
 <body>
-<nav class="navbar">
-    <a th:href="@{/}" class="logo">Quit Smoking</a>
-    <ul class="nav-links">
-        <li><a th:href="@{/dashboard}">Dashboard</a></li>
-        <li><a th:href="@{/user-profile}">Hồ Sơ Của Tôi</a></li>
->>>>>>> 35c6a47bdb5780cf48015a88cd926b4470d500c2
-        <li><a th:href="@{/smoking/log}">Ghi Nhận Hút Thuốc</a></li>
-        <li><a th:href="@{/smoking/quit-plan}">Lập Kế Hoạch Cai</a></li>
-        <li><a th:href="@{/smoking/quit-plans}">Kế Hoạch Của Tôi</a></li>
-        <li><a th:href="@{/feedback}">Gửi Phản Hồi</a></li>
-<<<<<<< HEAD
-        <li><a th:href="@{/blogs}">Blog chia sẻ kinh nghiệm</a></li>
-        <li><a th:href="@{/rate}">Đánh giá</a></li>
-        <li><a th:href="@{/contact-admin}">Liên hệ Quản trị viên</a></li>
-        <li sec:authorize="hasRole('ADMIN')">
-          <a th:href="@{/admin/dashboard}">Admin Dashboard</a>
-        </li>
-        <li>
-          <form th:action="@{/logout}" method="post" class="logout-form">
-            <button type="submit">Đăng xuất</button>
-          </form>
-        </li>
-      </ul>
-    </nav>
-
-    <div class="main-content">
-      <h1>Bảng điều khiển của bạn</h1>
-
-      <div id="alertContainer"></div>
-
-      <div class="dashboard-sections">
-        <div class="card">
-          <h3>Ngày không hút thuốc</h3>
-          <p>
-            Bạn đã không hút thuốc được
-            <span class="highlight" th:text="${smokeFreeDays}">0</span> ngày.
-          </p>
-        </div>
-        <div class="card">
-          <h3>Tiền tiết kiệm được</h3>
-          <p>
-            Bạn đã tiết kiệm được
-            <span
-              class="highlight"
-              th:text="${#numbers.formatDecimal(moneySaved, 0, 'COMMA', 0, 'POINT')} + ' VND'"
-              >0 VND</span
-            >.
-          </p>
-        </div>
-        <div class="card">
-          <h3>Lần hút thuốc gần nhất</h3>
-          <p th:if="${latestSmokingLog}">
-            Ngày:
-            <span
-              th:text="${#temporals.format(latestSmokingLog.date, 'dd/MM/yyyy HH:mm')}"
-            ></span
-            ><br />
-            Số điếu:
-            <span th:text="${latestSmokingLog.cigarettesSmoked}"></span> điếu
-          </p>
-          <p th:unless="${latestSmokingLog}">
-            Bạn chưa ghi nhận lần hút thuốc nào.
-          </p>
-        </div>
-      </div>
-
-      <div class="chart-container">
-        <h2>Số điếu thuốc hút hàng tuần</h2>
-        <canvas id="weeklySmokingChart"></canvas>
-      </div>
-
-      <div class="chart-container">
-        <h2>Tiền tiết kiệm tích lũy</h2>
-        <canvas id="cumulativeMoneySavedChart"></canvas>
-      </div>
-
-      <div class="health-progress-section">
-        <h2>Tiến trình sức khỏe của bạn</h2>
-        <ul class="health-milestones-list">
-          <li
-            th:each="milestone : ${healthMilestones}"
-            th:classappend="${milestone.achieved ? 'achieved' : 'pending'}"
-            class="health-milestone-item"
-          >
-            <span
-              class="icon"
-              th:text="${milestone.achieved ? '✅' : '⏳'}"
-            ></span>
-            <div>
-              <h4 th:text="${milestone.name}"></h4>
-              <p th:text="${milestone.description}"></p>
-            </div>
-          </li>
-          <li
-            th:if="${healthMilestones == null || healthMilestones.isEmpty()}"
-            class="health-milestone-item pending"
-          >
-            <span class="icon">ℹ️</span>
-            <div>
-              <h4>Chưa có dữ liệu sức khỏe</h4>
-              <p>
-                Hãy bắt đầu hành trình cai thuốc của bạn bằng cách cập nhật hồ
-                sơ và ghi nhận ngày bắt đầu cai!
-              </p>
-            </div>
+  <!-- Header -->
+  <header class="navbar sticky-top">
+    <div class="container d-flex justify-content-between align-items-center py-3">
+      <h2 class="text-danger fw-bold"><i class="bi bi-lungs"><a class="nav-link" th:href="@{/user-profile}"></a></i> Quit Smoking</h2>
+      <nav>
+        <ul class="nav">
+          <li class="nav-item"><a class="nav-link text-danger fw-bold" th:href="@{/dashboard}">Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link" th:href="@{/user-profile}">Hồ Sơ Của Tôi</a></li>
+          <li class="nav-item"><a class="nav-link" th:href="@{/membership}">Gói Thành Viên</a></li>
+          <li class="nav-item"><a class="nav-link" th:href="@{/smoking/log}">Ghi Nhận Hút Thuốc</a></li>
+          <li class="nav-item"><a class="nav-link" th:href="@{/smoking/quit-plan}">Lập Kế Hoạch Cai</a></li>
+          <li class="nav-item"><a class="nav-link" th:href="@{/smoking/quit-plans}">Kế Hoạch Của Tôi</a></li>
+          <li class="nav-item"><a class="nav-link" th:href="@{/feedback}">Gửi Phản Hồi</a></li>
+          <li class="nav-item"><a class="nav-link" th:href="@{/blogs}">Blog Chia Sẻ</a></li>
+          <li class="nav-item"><a class="nav-link" th:href="@{/rate}">Đánh Giá</a></li>
+          <li class="nav-item"><a class="nav-link" th:href="@{/contact-admin}">Liên Hệ Quản Trị</a></li>
+          <li class="nav-item" sec:authorize="hasRole('ADMIN')"><a class="nav-link" th:href="@{/admin/dashboard}">Admin Dashboard</a></li>
+          <li class="nav-item">
+            <form th:action="@{/logout}" method="post" class="d-inline">
+              <button type="submit" class="btn btn-outline-danger btn-sm">Đăng Xuất</button>
+            </form>
           </li>
         </ul>
-      </div>
+      </nav>
+    </div>
+  </header>
 
-      <div class="achievements-section">
-        <h2>Thành tích của bạn</h2>
-        <div th:if="${userAchievements == null || userAchievements.isEmpty()}">
-          <p>
-            Bạn chưa đạt được thành tích nào. Hãy tiếp tục hành trình cai thuốc
-            để mở khóa các huy hiệu!
-          </p>
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container d-flex flex-wrap align-items-center">
+      <div class="col-md-6">
+        <p class="text-uppercase text-danger fw-bold">Hành Trình Cai Thuốc Lá</p>
+        <h1 class="display-5 fw-bold">Người Bạn Đồng Hành <br /> Trong Sức Khỏe</h1>
+        <p class="text-muted">Chúng tôi hỗ trợ bạn từng bước trên con đường từ bỏ thuốc lá, mang lại cuộc sống khỏe mạnh hơn.</p>
+        <a th:href="@{/smoking/quit-plan}" class="btn btn-danger">Lập Kế Hoạch Cai Thuốc</a>
+      </div>
+      <div class="col-md-6 text-center">
+        <img src="../static/images/img-1.jpg" alt="Healthy Life" class="img-fluid rounded" />
+      </div>
+    </div>
+  </section>
+
+  <!-- Info Boxes -->
+  <section class="info-boxes py-4">
+    <div class="container d-flex flex-wrap justify-content-between">
+      <div class="card col-md-3 p-3 m-2 shadow-sm">
+        <h6 class="text-primary">Hỗ Trợ 24/7</h6>
+        <h5>Trò Chuyện Với Coach</h5>
+        <p>Nhận hỗ trợ mọi lúc từ các huấn luyện viên để duy trì động lực cai thuốc.</p>
+      </div>
+      <div class="card col-md-3 p-3 m-2 shadow-sm">
+        <h6 class="text-primary">Theo Dõi Tiến Trình</h6>
+        <h5>Thống Kê Hàng Ngày</h5>
+        <p>Xem số ngày không hút thuốc và tiền tiết kiệm được qua biểu đồ trực quan.</p>
+      </div>
+      <div class="card col-md-3 p-3 m-2 shadow-sm">
+        <h6 class="text-primary">Liên Hệ Khẩn Cấp</h6>
+        <h5>+84-123-456-789</h5>
+        <p>Liên hệ ngay khi bạn cần hỗ trợ trong hành trình cai thuốc.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dashboard Sections -->
+  <section class="py-5 bg-light text-center">
+    <div class="container">
+      <h2 class="fw-bold text-primary mb-3">Tiến Trình Cai Thuốc Lá</h2>
+      <p class="text-muted mb-5">Theo dõi hành trình của bạn với các chỉ số sức khỏe, thành tích và biểu đồ chi tiết.</p>
+      <div class="row">
+        <div class="col-md-4 mb-4">
+          <div class="card p-3 shadow-sm h-100">
+            <i class="bi bi-calendar-check display-6 text-danger mb-3"></i>
+            <h5>Ngày Không Hút Thuốc</h5>
+            <p class="text-muted">Bạn đã không hút thuốc được <span class="fw-bold text-success" th:text="${smokeFreeDays}">0</span> ngày.</p>
+          </div>
         </div>
-        <div
-          th:unless="${userAchievements == null || userAchievements.isEmpty()}"
-          class="achievements-grid"
-        >
-          <div
-            class="achievement-item"
-            th:each="userAchievement : ${userAchievements}"
-          >
-            <img
-              th:if="${userAchievement.achievement.iconUrl != null}"
-              Add
-              commentMore
-              actions
-              th:src="${userAchievement.achievement.iconUrl}"
-              alt="Icon"
-              th:title="${userAchievement.achievement.description}"
-            />
-            <h4 th:text="${userAchievement.achievement.name}"></h4>
-            <p
-              th:text="${#temporals.format(userAchievement.dateAchieved, 'dd/MM/yyyy')}"
-            ></p>
+        <div class="col-md-4 mb-4">
+          <div class="card p-3 shadow-sm h-100">
+            <i class="bi bi-wallet display-6 text-danger mb-3"></i>
+            <h5>Tiền Tiết Kiệm</h5>
+            <p class="text-muted">Bạn đã tiết kiệm được <span class="fw-bold text-success" th:text="${#numbers.formatDecimal(moneySaved, 0, 'COMMA', 0, 'POINT')} + ' VND'">0 VND</span>.</p>
+          </div>
+        </div>
+        <div class="col-md-4 mb-4">
+          <div class="card p-3 shadow-sm h-100">
+            <i class="bi bi-clock-history display-6 text-danger mb-3"></i>
+            <h5>Lần Hút Gần Nhất</h5>
+            <p th:if="${latestSmokingLog}" class="text-muted">
+              Ngày: <span th:text="${#temporals.format(latestSmokingLog.date, 'dd/MM/yyyy HH:mm')}"></span><br />
+              Số điếu: <span th:text="${latestSmokingLog.cigarettesSmoked}"></span> điếu
+            </p>
+            <p th:unless="${latestSmokingLog}" class="text-muted">Bạn chưa ghi nhận lần hút thuốc nào.</p>
           </div>
         </div>
       </div>
+    </div>
+  </section>
 
-      <div class="action-buttons">
-        <a th:href="@{/smoking/log}" class="btn-primary"
-          >Ghi nhận hoạt động hút thuốc</a
-        >
-        <a th:href="@{/smoking/quit-plan}" class="btn-secondary"
-          >Lập kế hoạch cai thuốc</a
-        >
+  <!-- Charts -->
+  <section class="chart-container">
+    <h2 class="fw-bold text-primary text-center mb-3">Số Điếu Thuốc Hút Hàng Tuần</h2>
+    <canvas id="weeklySmokingChart"></canvas>
+  </section>
+  <section class="chart-container">
+    <h2 class="fw-bold text-primary text-center mb-3">Tiền Tiết Kiệm Tích Lũy</h2>
+    <canvas id="cumulativeMoneySavedChart"></canvas>
+  </section>
+
+  <!-- Health Progress -->
+  <section class="py-5">
+    <div class="container">
+      <h2 class="fw-bold text-primary text-center mb-3">Tiến Trình Sức Khỏe</h2>
+      <p class="text-muted text-center mb-5">Những cột mốc sức khỏe bạn đã đạt được trong hành trình cai thuốc.</p>
+      <ul class="health-milestones-list row">
+        <li th:each="milestone : ${healthMilestones}" th:classappend="${milestone.achieved ? 'achieved' : 'pending'}" class="health-milestone-item col-md-4 mb-4">
+          <span class="icon" th:text="${milestone.achieved ? '✅' : '⏳'}"></span>
+          <div>
+            <h4 th:text="${milestone.name}"></h4>
+            <p th:text="${milestone.description}"></p>
+          </div>
+        </li>
+        <li th:if="${healthMilestones == null || healthMilestones.isEmpty()}" class="health-milestone-item pending col-md-4 mb-4">
+          <span class="icon">ℹ️</span>
+          <div>
+            <h4>Chưa Có Dữ Liệu</h4>
+            <p>Hãy bắt đầu hành trình cai thuốc của bạn bằng cách cập nhật hồ sơ và ghi nhận ngày bắt đầu cai!</p>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Achievements -->
+  <section class="py-5 bg-light">
+    <div class="container">
+      <h2 class="fw-bold text-primary text-center mb-3">Thành Tích Của Bạn</h2>
+      <p class="text-muted text-center mb-5">Các huy hiệu bạn đã đạt được trong hành trình cai thuốc lá.</p>
+      <div th:if="${userAchievements == null || userAchievements.isEmpty()}" class="text-center">
+        <p>Bạn chưa đạt được thành tích nào. Hãy tiếp tục hành trình để mở khóa các huy hiệu!</p>
+      </div>
+      <div th:unless="${userAchievements == null || userAchievements.isEmpty()}" class="achievements-grid row">
+        <div class="card achievement-item col-md-3 mb-4 shadow-sm" th:each="userAchievement : ${userAchievements}">
+          <img th:if="${userAchievement.achievement.iconUrl != null}" th:src="${userAchievement.achievement.iconUrl}" alt="Achievement Icon" class="img-fluid" style="width: 60px; height: 60px; margin: 0 auto;" />
+          <h4 th:text="${userAchievement.achievement.name}"></h4>
+          <p th:text="${#temporals.format(userAchievement.dateAchieved, 'dd/MM/yyyy')}"></p>
+        </div>
       </div>
     </div>
+  </section>
 
-    <script th:inline="javascript">
-      /*<![CDATA[*/
-      // Dữ liệu được truyền từ backend
-      const successMessage = /*[[${successMessage}]]*/ null;
-      const errorMessage = /*[[${errorMessage}]]*/ null;
-      const latestSmokingLog = /*[[${latestSmokingLog}]]*/ null;
-      const smokeFreeDays = /*[[${smokeFreeDays}]]*/ 0;
-      const moneySaved = /*[[${moneySaved}]]*/ 0.0;
-      const userAchievements = /*[[${userAchievements}]]*/ [];
-      const userRole = /*[[${userRole}]]*/ "MEMBER";
-      const healthMilestones = /*[[${healthMilestones}]]*/ [];
-      const userId = /*[[${userId}]]*/ null; // Lấy userId để gọi API
-      /*]]>*/
+  <!-- Action Buttons -->
+  <section class="py-5 text-center">
+    <div class="container">
+      <a th:href="@{/smoking/log}" class="btn btn-danger me-3">Ghi Nhận Hút Thuốc</a>
+      <a th:href="@{/smoking/quit-plan}" class="btn btn-outline-primary">Lập Kế Hoạch Cai Thuốc</a>
+      <a href="/chat/select" class="btn btn-outline-primary ms-3">Trò Chuyện Với Coach</a>
+    </div>
+  </section>
 
-      const alertContainer = document.getElementById("alertContainer");
-
-      function showAlert(message, type = "info", duration = 5000) {
-        const alertDiv = document.createElement("div");
-=======
-        <li><a th:href="@{/rate}">Đánh giá</a></li>
-        <li sec:authorize="hasRole('ADMIN')"><a th:href="@{/admin/dashboard}">Admin Dashboard</a></li>
-        <li>
-            <form th:action="@{/logout}" method="post" class="logout-form">
-                <button type="submit">Đăng xuất</button>
-            </form>
-        </li>
-    </ul>
-</nav>
-
-<div class="main-content">
-    <h1>Bảng điều khiển của bạn</h1>
-
-    <div id="alertContainer"></div>
-
-    <div class="dashboard-sections">
-        <div class="card">
-            <h3>Ngày không hút thuốc</h3>
-            <p>Bạn đã không hút thuốc được <span class="highlight" th:text="${smokeFreeDays}">0</span> ngày.</p>
+  <!-- Motivation Form -->
+  <section class="py-5 bg-light">
+    <div class="container">
+      <div class="card p-4 shadow-sm">
+        <h2 class="fw-bold text-primary text-center mb-3">Thêm Lời Động Viên</h2>
+        <div id="motivationForm" class="text-center">
+          <form th:action="@{/dashboard/addMotivation}" method="post" th:object="${newMotivation}">
+            <textarea th:field="*{message}" rows="3" placeholder="Nhập lời động viên..." class="form-control mb-3" required></textarea>
+            <button type="submit" class="btn btn-danger">Gửi</button>
+          </form>
         </div>
-        <div class="card">
-            <h3>Tiền tiết kiệm được</h3>
-            <p>Bạn đã tiết kiệm được <span class="highlight" th:text="${#numbers.formatDecimal(moneySaved, 0, 'COMMA', 0, 'POINT')} + ' VND'">0 VND</span>.</p>
+      </div>
+    </section>
+
+  <!-- Footer -->
+  <footer class="bg-white pt-5 mt-5 border-top">
+    <div class="container">
+      <div class="row text-muted">
+        <div class="col-md-3 mb-3">
+          <h4 class="text-danger fw-bold">Quit Smoking</h4>
+          <p>Hỗ trợ bạn từ bỏ thuốc lá với các công cụ, kế hoạch và động lực để sống khỏe mạnh hơn.</p>
+          <div class="d-flex">
+            <a href="#" class="me-2 text-dark"><i class="bi bi-facebook"></i></a>
+            <a href="#" class="me-2 text-dark"><i class="bi bi-twitter"></i></a>
+            <a href="#" class="me-2 text-dark"><i class="bi bi-linkedin"></i></a>
+          </div>
         </div>
-        <div class="card">
-            <h3>Lần hút thuốc gần nhất</h3>
-            <p th:if="${latestSmokingLog}">
-                Ngày: <span th:text="${#temporals.format(latestSmokingLog.date, 'dd/MM/yyyy HH:mm')}"></span><br/>
-                Số điếu: <span th:text="${latestSmokingLog.cigarettesSmoked}"></span> điếu
-            </p>
-            <p th:unless="${latestSmokingLog}">
-                Bạn chưa ghi nhận lần hút thuốc nào.
-            </p>
+        <div class="col-md-3 mb-3">
+          <h6 class="fw-bold">Dịch Vụ</h6>
+          <ul class="mt-2">
+            <li>Lập Kế Hoạch Cai Thuốc</li>
+            <li>Theo Dõi Sức Khỏe</li>
+            <li>Hỗ Trợ Từ Coach</li>
+            <li>Blog Chia Sẻ</li>
+            <li>Phản Hồi</li>
+          </ul>
         </div>
-    </div>
-
-    <div class="chart-container">
-        <h2>Số điếu thuốc hút hàng tuần</h2>
-        <canvas id="weeklySmokingChart"></canvas>
-    </div>
-
-    <div class="chart-container">
-        <h2>Tiền tiết kiệm tích lũy</h2>
-        <canvas id="cumulativeMoneySavedChart"></canvas>
-    </div>
-
-    <div class="health-progress-section">
-        <h2>Tiến trình sức khỏe của bạn</h2>
-        <ul class="health-milestones-list">
-            <li th:each="milestone : ${healthMilestones}" th:classappend="${milestone.achieved ? 'achieved' : 'pending'}" class="health-milestone-item">
-                <span class="icon" th:text="${milestone.achieved ? '✅' : '⏳'}"></span>
-                <div>
-                    <h4 th:text="${milestone.name}"></h4>
-                    <p th:text="${milestone.description}"></p>
-                </div>
-            </li>
-            <li th:if="${healthMilestones == null || healthMilestones.isEmpty()}" class="health-milestone-item pending">
-                <span class="icon">ℹ️</span>
-                <div>
-                    <h4>Chưa có dữ liệu sức khỏe</h4>
-                    <p>Hãy bắt đầu hành trình cai thuốc của bạn bằng cách cập nhật hồ sơ và ghi nhận ngày bắt đầu cai!</p>
-                </div>
-            </li>
-        </ul>
-    </div>
-
-    <div class="achievements-section">
-        <h2>Thành tích của bạn</h2>
-        <div th:if="${userAchievements == null || userAchievements.isEmpty()}">
-            <p>Bạn chưa đạt được thành tích nào. Hãy tiếp tục hành trình cai thuốc để mở khóa các huy hiệu!</p>
+        <div class="col-md-3 mb-3">
+          <h6 class="fw-bold">Hỗ Trợ</h6>
+          <ul class="mt-2">
+            <li>Điều Khoản & Điều Kiện</li>
+            <li>Chính Sách Bảo Mật</li>
+            <li>Hỗ Trợ Cộng Đồng</li>
+            <li>Câu Hỏi Thường Gặp</li>
+            <li>Giấy Phép</li>
+          </ul>
         </div>
-        <div th:unless="${userAchievements == null || userAchievements.isEmpty()}" class="achievements-grid">
-            <div class="achievement-item" th:each="userAchievement : ${userAchievements}">
-               <img th:if="${userAchievement.achievement.iconUrl != null}"Add commentMore actions
-                        th:src="${userAchievement.achievement.iconUrl}"
-                        alt="Icon"
-                        th:title="${userAchievement.achievement.description}">
-                <h4 th:text="${userAchievement.achievement.name}"></h4>
-                <p th:text="${#temporals.format(userAchievement.dateAchieved, 'dd/MM/yyyy')}"></p>
-            </div>
+        <div class="col-md-3 mb-3">
+          <h6 class="fw-bold">Liên Hệ</h6>
+          <p class="mb-1"><i class="bi bi-envelope"></i> support@quitsmoking.com</p>
+          <p class="mb-1"><i class="bi bi-clock"></i> Thứ 2 - Thứ 6: 08:30 - 18:00</p>
+          <p class="fw-bold"><i class="bi bi-telephone"></i> +84-123-456-789</p>
         </div>
+      </div>
+      <div class="text-center text-muted py-3 border-top mt-4">
+        <small>Copyright © 2025, Designed & Developed by <span class="text-danger">Quit Smoking Team</span></small>
+      </div>
     </div>
+  </footer>
 
-    <div class="action-buttons">
-        <a th:href="@{/smoking/log}" class="btn-primary">Ghi nhận hoạt động hút thuốc</a>
-        <a th:href="@{/smoking/quit-plan}" class="btn-secondary">Lập kế hoạch cai thuốc</a>
-    </div>
-</div>
+  <div id="alertContainer"></div>
 
-<script th:inline="javascript">
+  <script th:inline="javascript">
     /*<![CDATA[*/
-    // Dữ liệu được truyền từ backend
     const successMessage = /*[[${successMessage}]]*/ null;
     const errorMessage = /*[[${errorMessage}]]*/ null;
     const latestSmokingLog = /*[[${latestSmokingLog}]]*/ null;
     const smokeFreeDays = /*[[${smokeFreeDays}]]*/ 0;
     const moneySaved = /*[[${moneySaved}]]*/ 0.0;
     const userAchievements = /*[[${userAchievements}]]*/ [];
-    const userRole = /*[[${userRole}]]*/ 'MEMBER';
+    const userRole = /*[[${userRole}]]*/ "MEMBER";
     const healthMilestones = /*[[${healthMilestones}]]*/ [];
-    const userId = /*[[${userId}]]*/ null; // Lấy userId để gọi API
-    /*]]>*/
+    const userId = /*[[${userId}]]*/ null;
 
-    const alertContainer = document.getElementById('alertContainer');
+    const alertContainer = document.getElementById("alertContainer");
 
-    function showAlert(message, type = 'info', duration = 5000) {
-        const alertDiv = document.createElement('div');
->>>>>>> 35c6a47bdb5780cf48015a88cd926b4470d500c2
-        alertDiv.className = `alert-popup ${type}`;
-        alertDiv.innerHTML = `
-            <span>${message}</span>
-            <button class="close-btn">&times;</button>
-        `;
-        alertContainer.appendChild(alertDiv);
+    function showAlert(message, type = "info", duration = 5000) {
+      const alertDiv = document.createElement("div");
+      alertDiv.className = `alert-popup ${type}`;
+      alertDiv.innerHTML = `
+        <span>${message}</span>
+        <button class="close-btn">×</button>
+      `;
+      alertContainer.appendChild(alertDiv);
 
-        setTimeout(() => {
-<<<<<<< HEAD
-          alertDiv.classList.add("show");
-        }, 100);
+      setTimeout(() => {
+        alertDiv.classList.add("show");
+      }, 100);
 
-        const timeoutId = setTimeout(() => {
-          alertDiv.classList.remove("show");
-          alertDiv.addEventListener("transitionend", () => alertDiv.remove());
-        }, duration);
+      const timeoutId = setTimeout(() => {
+        alertDiv.classList.remove("show");
+        alertDiv.addEventListener("transitionend", () => alertDiv.remove());
+      }, duration);
 
-        alertDiv.querySelector(".close-btn").addEventListener("click", () => {
-          clearTimeout(timeoutId);
-          alertDiv.classList.remove("show");
-          alertDiv.addEventListener("transitionend", () => alertDiv.remove());
-        });
-      }
+      alertDiv.querySelector(".close-btn").addEventListener("click", () => {
+        clearTimeout(timeoutId);
+        alertDiv.classList.remove("show");
+        alertDiv.addEventListener("transitionend", () => alertDiv.remove());
+      });
+    }
 
-      document.addEventListener("DOMContentLoaded", () => {
-        console.log("🧪 DEBUG - userId:", userId, "role:", userRole);
+    document.addEventListener("DOMContentLoaded", () => {
+      console.log("🧪 DEBUG - userId:", userId, "role:", userRole);
 
-        if (userRole === "MEMBER") {
-          let priorityAlertShown = false;
+      if (userRole === "MEMBER") {
+        let priorityAlertShown = false;
 
-          // 1. Mốc sức khỏe mới
-          if (healthMilestones && healthMilestones.length > 0) {
-            const latestAchieved = healthMilestones.findLast((m) => {
-              if (m.achieved && m.dateAchieved) {
-                const achievedDate = new Date(m.dateAchieved);
-                const now = new Date();
-                return Math.abs(now - achievedDate) / 36e5 < 24;
-              }
-              return false;
-            });
-
-            if (latestAchieved) {
-              const milestoneName = latestAchieved.name;
-              const milestoneDateStr = latestAchieved.dateAchieved;
-              const milestoneKey = `shownMilestone-${milestoneName}-${milestoneDateStr}`;
-              const alreadyShown = localStorage.getItem(milestoneKey);
-
-              if (!alreadyShown) {
-                showAlert(
-                  `💪 Tuyệt vời! Bạn đã đạt được mốc sức khỏe mới: "${milestoneName}"!`,
-                  "success",
-                  8000
-                );
-                localStorage.setItem(milestoneKey, "true");
-                priorityAlertShown = true;
-              }
+        if (healthMilestones && healthMilestones.length > 0) {
+          const latestAchieved = healthMilestones.findLast((m) => {
+            if (m.achieved && m.dateAchieved) {
+              const achievedDate = new Date(m.dateAchieved);
+              const now = new Date();
+              return Math.abs(now - achievedDate) / 36e5 < 24;
             }
-          }
+            return false;
+          });
 
-          // 2. Huy hiệu mới
-          if (
-            !priorityAlertShown &&
-            userAchievements &&
-            userAchievements.length > 0
-          ) {
-            const newestAchievement = userAchievements.findLast((ua) => {
-              if (ua.dateAchieved) {
-                const achievementDate = new Date(ua.dateAchieved);
-                const now = new Date();
-                return Math.abs(now - achievementDate) / 36e5 < 24;
-              }
-              return false;
-            });
+          if (latestAchieved) {
+            const milestoneName = latestAchieved.name;
+            const milestoneDateStr = latestAchieved.dateAchieved;
+            const milestoneKey = `shownMilestone-${milestoneName}-${milestoneDateStr}`;
+            const alreadyShown = localStorage.getItem(milestoneKey);
 
-            if (newestAchievement) {
-              const achievementName = newestAchievement.achievement.name;
-              const achievementDateStr = newestAchievement.dateAchieved;
-              const achievementKey = `shownAchievement-${achievementName}-${achievementDateStr}`;
-              const alreadyShown = localStorage.getItem(achievementKey);
-
-              if (!alreadyShown) {
-                showAlert(
-                  `🎖️ Chúc mừng! Bạn vừa đạt được huy hiệu mới: "${achievementName}"!`,
-                  "success",
-                  8000
-                );
-                localStorage.setItem(achievementKey, "true");
-                priorityAlertShown = true;
-              }
-            }
-          }
-
-          // 3. Các thông báo khác
-          if (!priorityAlertShown) {
-            if (smokeFreeDays > 0) {
+            if (!alreadyShown) {
               showAlert(
-                `🎉 Bạn đã không hút thuốc được ${smokeFreeDays} ngày và tiết kiệm được ${moneySaved.toLocaleString(
-                  "vi-VN"
-                )} VND!`,
-                "info"
+                `💪 Tuyệt vời! Bạn đã đạt được mốc sức khỏe mới: "${milestoneName}"!`,
+                "success",
+                8000
               );
-            } else if (
-              smokeFreeDays === 0 &&
-              latestSmokingLog &&
-              latestSmokingLog.cigarettesSmoked > 0
-            ) {
-              showAlert(
-                `Bạn đã ghi nhận hút thuốc gần đây. Đừng nản lòng, hãy bắt đầu lại ngay hôm nay!`,
-                "warning",
-                10000
-              );
-            } else if (
-              smokeFreeDays === 0 &&
-              (!latestSmokingLog || latestSmokingLog.cigarettesSmoked === 0) &&
-              moneySaved === 0
-            ) {
-              showAlert(
-                "Chào mừng bạn! Hãy cập nhật hồ sơ và ghi nhận hoạt động hút thuốc để bắt đầu hành trình của bạn!",
-                "info",
-                10000
-              );
+              localStorage.setItem(milestoneKey, "true");
+              priorityAlertShown = true;
             }
           }
         }
 
-        // --- Fetch và Vẽ biểu đồ ---
-        if (userId) {
-          // Đảm bảo userId tồn tại trước khi gọi API
-          // Biểu đồ số điếu thuốc hút hàng tuần
-          fetch(`/api/smoking/stats/weekly-chart-data`) // Đã bỏ userId=${userId}
-            .then((response) => {
-              if (!response.ok) {
-                return response.text().then((text) => {
-                  throw new Error(
-                    `Network response was not ok (${response.status} ${response.statusText}): ${text}`
-                  );
-                });
-              }
-              return response.json();
-            })
-            .then((data) => {
-              if (
-                data &&
-                data.labels &&
-                data.labels.length > 0 &&
-                data.data &&
-                data.data.length > 0
-              ) {
-                const ctx = document
-                  .getElementById("weeklySmokingChart")
-                  .getContext("2d");
-                new Chart(ctx, {
-                  type: "bar",
-                  data: {
-                    labels: data.labels,
-                    datasets: [
-                      {
-                        label: data.title || "Số điếu thuốc hút hàng tuần",
-                        data: data.data,
-                        backgroundColor: "rgba(0, 123, 255, 0.7)",
-                        borderColor: "rgba(0, 123, 255, 1)",
-                        borderWidth: 1,
-                      },
-                    ],
-                  },
-                  options: {
-                    responsive: true,
-                    plugins: {
-                      title: {
-                        display: true,
-                        text: data.title || "Số điếu thuốc hút hàng tuần",
-                      },
-                    },
-                    scales: {
-                      y: {
-                        beginAtZero: true,
-                        title: {
-                          display: true,
-                          text: "Số điếu",
-                        },
-                        ticks: {
-                          precision: 0,
-                        },
-                      },
-                      x: {
-                        title: {
-                          display: true,
-                          text: "Tuần",
-                        },
-                      },
-                    },
-                  },
-                });
-              } else {
-                showAlert(
-                  "Không có dữ liệu để vẽ biểu đồ số điếu thuốc hút hàng tuần.",
-                  "info",
-                  7000
-                );
-                console.warn(
-                  "No data available for weekly smoking chart:",
-                  data
-                );
-              }
-            })
-            .catch((error) => {
-              console.error("Error fetching weekly smoking stats:", error);
-              showAlert(
-                "Không thể tải dữ liệu biểu đồ tuần. Vui lòng thử lại sau.",
-                "error"
-              );
-            });
+        if (!priorityAlertShown && userAchievements && userAchievements.length > 0) {
+          const newestAchievement = userAchievements.findLast((ua) => {
+            if (ua.dateAchieved) {
+              const achievementDate = new Date(ua.dateAchieved);
+              const now = new Date();
+              return Math.abs(now - achievementDate) / 36e5 < 24;
+            }
+            return false;
+          });
 
-          // Biểu đồ tiền tiết kiệm tích lũy
-          fetch(`/api/smoking/stats/money-saved-chart-data?daysToLookBack=90`) // Đã bỏ userId=${userId}
-            .then((response) => {
-              if (!response.ok) {
-                return response.text().then((text) => {
-                  throw new Error(
-                    `Network response was not ok (${response.status} ${response.statusText}): ${text}`
-                  );
-                });
-              }
-              return response.json();
-            })
-            .then((data) => {
-              if (
-                data &&
-                data.labels &&
-                data.labels.length > 0 &&
-                data.data &&
-                data.data.length > 0
-              ) {
-                const ctx = document
-                  .getElementById("cumulativeMoneySavedChart")
-                  .getContext("2d");
-                new Chart(ctx, {
-                  type: "line",
-                  data: {
-                    labels: data.labels,
-                    datasets: [
-                      {
-                        label: data.title || "Tiền tiết kiệm tích lũy",
-                        data: data.data,
-                        backgroundColor: "rgba(40, 167, 69, 0.2)", // Light green fill
-                        borderColor: "rgba(40, 167, 69, 1)",
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.1,
-                      },
-                    ],
+          if (newestAchievement) {
+            const achievementName = newestAchievement.achievement.name;
+            const achievementDateStr = newestAchievement.dateAchieved;
+            const achievementKey = `shownAchievement-${achievementName}-${achievementDateStr}`;
+            const alreadyShown = localStorage.getItem(achievementKey);
+
+            if (!alreadyShown) {
+              showAlert(
+                `🎖️ Chúc mừng! Bạn vừa đạt được huy hiệu mới: "${achievementName}"!`,
+                "success",
+                8000
+              );
+              localStorage.setItem(achievementKey, "true");
+              priorityAlertShown = true;
+            }
+          }
+        }
+
+        if (!priorityAlertShown) {
+          if (smokeFreeDays > 0) {
+            showAlert(
+              `🎉 Bạn đã không hút thuốc được ${smokeFreeDays} ngày và tiết kiệm được ${moneySaved.toLocaleString("vi-VN")} VND!`,
+              "info"
+            );
+          } else if (smokeFreeDays === 0 && latestSmokingLog && latestSmokingLog.cigarettesSmoked > 0) {
+            showAlert(
+              `Bạn đã ghi nhận hút thuốc gần đây. Đừng nản lòng, hãy bắt đầu lại ngay hôm nay!`,
+              "warning",
+              10000
+            );
+          } else if (smokeFreeDays === 0 && (!latestSmokingLog || latestSmokingLog.cigarettesSmoked === 0) && moneySaved === 0) {
+            showAlert(
+              "Chào mừng bạn! Hãy cập nhật hồ sơ và ghi nhận hoạt động hút thuốc để bắt đầu hành trình của bạn!",
+              "info",
+              10000
+            );
+          }
+        }
+      }
+
+      if (userId) {
+        fetch(`/api/smoking/stats/weekly-chart-data`)
+          .then((response) => {
+            if (!response.ok) {
+              return response.text().then((text) => {
+                throw new Error(`Network response was not ok (${response.status} ${response.statusText}): ${text}`);
+              });
+            }
+            return response.json();
+          })
+          .then((data) => {
+            if (data && data.labels && data.labels.length > 0 && data.data && data.data.length > 0) {
+              const ctx = document.getElementById("weeklySmokingChart").getContext("2d");
+              new Chart(ctx, {
+                type: "bar",
+                data: {
+                  labels: data.labels,
+                  datasets: [{
+                    label: data.title || "Số điếu thuốc hút hàng tuần",
+                    data: data.data,
+                    backgroundColor: "rgba(0, 123, 255, 0.7)",
+                    borderColor: "rgba(0, 123, 255, 1)",
+                    borderWidth: 1,
+                  }],
+                },
+                options: {
+                  responsive: true,
+                  plugins: {
+                    title: {
+                      display: true,
+                      text: data.title || "Số điếu thuốc hút hàng tuần",
+                    },
                   },
-                  options: {
-                    responsive: true,
-                    plugins: {
+                  scales: {
+                    y: {
+                      beginAtZero: true,
                       title: {
                         display: true,
-                        text: data.title || "Tiền tiết kiệm tích lũy",
+                        text: "Số điếu",
                       },
-                      tooltip: {
-                        callbacks: {
-                          label: function (context) {
-                            let label = context.dataset.label || "";
-                            if (label) {
-                              label += ": ";
-                            }
-                            // Định dạng số tiền
-                            return (
-                              label +
-                              new Intl.NumberFormat("vi-VN", {
-                                style: "currency",
-                                currency: "VND",
-                              }).format(context.raw)
-                            );
-                          },
-                        },
+                      ticks: {
+                        precision: 0,
                       },
                     },
-                    scales: {
-                      y: {
-                        beginAtZero: true,
-                        title: {
-                          display: true,
-                          text: "Số tiền (VND)",
-                        },
-                        // Định dạng nhãn trục Y
-                        ticks: {
-                          callback: function (value, index, values) {
-                            return new Intl.NumberFormat("vi-VN").format(value); // Hiển thị số có dấu phân cách hàng nghìn
-                          },
-                        },
+                    x: {
+                      title: {
+                        display: true,
+                        text: "Tuần",
                       },
-                      x: {
-                        title: {
-                          display: true,
-                          text: "Ngày",
-                        },
-                        ticks: {
-                          autoSkip: true,
-                          maxTicksLimit: 10,
+                    },
+                  },
+                },
+              });
+            } else {
+              showAlert(
+                "Không có dữ liệu để vẽ biểu đồ số điếu thuốc hút hàng tuần.",
+                "info",
+                7000
+              );
+              console.warn("No data available for weekly smoking chart:", data);
+            }
+          })
+          .catch((error) => {
+            console.error("Error fetching weekly smoking stats:", error);
+            showAlert(
+              "Không thể tải dữ liệu biểu đồ tuần. Vui lòng thử lại sau.",
+              "error"
+            );
+          });
+
+        fetch(`/api/smoking/stats/money-saved-chart-data?daysToLookBack=90`)
+          .then((response) => {
+            if (!response.ok) {
+              return response.text().then((text) => {
+                throw new Error(`Network response was not ok (${response.status} ${response.statusText}): ${text}`);
+              });
+            }
+            return response.json();
+          })
+          .then((data) => {
+            if (data && data.labels && data.labels.length > 0 && data.data && data.data.length > 0) {
+              const ctx = document.getElementById("cumulativeMoneySavedChart").getContext("2d");
+              new Chart(ctx, {
+                type: "line",
+                data: {
+                  labels: data.labels,
+                  datasets: [{
+                    label: data.title || "Tiền tiết kiệm tích lũy",
+                    data: data.data,
+                    backgroundColor: "rgba(40, 167, 69, 0.2)",
+                    borderColor: "rgba(40, 167, 69, 1)",
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.1,
+                  }],
+                },
+                options: {
+                  responsive: true,
+                  plugins: {
+                    title: {
+                      display: true,
+                      text: data.title || "Tiền tiết kiệm tích lũy",
+                    },
+                    tooltip: {
+                      callbacks: {
+                        label: function (context) {
+                          let label = context.dataset.label || "";
+                          if (label) {
+                            label += ": ";
+                          }
+                          return label + new Intl.NumberFormat("vi-VN", {
+                            style: "currency",
+                            currency: "VND",
+                          }).format(context.raw);
                         },
                       },
                     },
                   },
-                });
-              } else {
-                showAlert(
-                  "Không có dữ liệu để vẽ biểu đồ tiền tiết kiệm tích lũy.",
-                  "info",
-                  7000
-                );
-                console.warn(
-                  "No data available for cumulative money saved chart:",
-                  data
-                );
-              }
-            })
-            .catch((error) => {
-              console.error(
-                "Error fetching cumulative money saved stats:",
-                error
-              );
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                      title: {
+                        display: true,
+                        text: "Số tiền (VND)",
+                      },
+                      ticks: {
+                        callback: function (value) {
+                          return new Intl.NumberFormat("vi-VN").format(value);
+                        },
+                      },
+                    },
+                    x: {
+                      title: {
+                        display: true,
+                        text: "Ngày",
+                      },
+                      ticks: {
+                        autoSkip: true,
+                        maxTicksLimit: 10,
+                      },
+                    },
+                  },
+                },
+              });
+            } else {
               showAlert(
-                "Không thể tải dữ liệu biểu đồ tiền tiết kiệm. Vui lòng thử lại sau.",
-                "error"
+                "Không có dữ liệu để vẽ biểu đồ tiền tiết kiệm tích lũy.",
+                "info",
+                7000
               );
-            });
+              console.warn("No data available for cumulative money saved chart:", data);
+            }
+          })
+          .catch((error) => {
+            console.error("Error fetching cumulative money saved stats:", error);
+            showAlert(
+              "Không thể tải dữ liệu biểu đồ tiền tiết kiệm. Vui lòng thử lại sau.",
+              "error"
+            );
+          });
         } else {
-          console.error(
-            "User ID not available for API calls. Charts will not load."
-          );
+          console.error("User ID not available for API calls. Charts will not load.");
           showAlert(
             "Không thể tải dữ liệu biểu đồ. Vui lòng đăng nhập lại.",
             "error"
@@ -1417,244 +684,5 @@
         }
       });
     </script>
-  </body>
-</html>
-=======
-            alertDiv.classList.add('show');
-        }, 100);
-
-        const timeoutId = setTimeout(() => {
-            alertDiv.classList.remove('show');
-            alertDiv.addEventListener('transitionend', () => alertDiv.remove());
-        }, duration);
-
-        alertDiv.querySelector('.close-btn').addEventListener('click', () => {
-            clearTimeout(timeoutId);
-            alertDiv.classList.remove('show');
-            alertDiv.addEventListener('transitionend', () => alertDiv.remove());
-        });
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-    console.log("🧪 DEBUG - userId:", userId, "role:", userRole);
-
-    if (userRole === 'MEMBER') {
-        let priorityAlertShown = false;
-
-        // 1. Mốc sức khỏe mới
-        if (healthMilestones && healthMilestones.length > 0) {
-            const latestAchieved = healthMilestones.findLast(m => {
-                if (m.achieved && m.dateAchieved) {
-                    const achievedDate = new Date(m.dateAchieved);
-                    const now = new Date();
-                    return Math.abs(now - achievedDate) / 36e5 < 24;
-                }
-                return false;
-            });
-
-            if (latestAchieved) {
-                const milestoneName = latestAchieved.name;
-                const milestoneDateStr = latestAchieved.dateAchieved;
-                const milestoneKey = `shownMilestone-${milestoneName}-${milestoneDateStr}`;
-                const alreadyShown = localStorage.getItem(milestoneKey);
-
-                if (!alreadyShown) {
-                    showAlert(`💪 Tuyệt vời! Bạn đã đạt được mốc sức khỏe mới: "${milestoneName}"!`, 'success', 8000);
-                    localStorage.setItem(milestoneKey, "true");
-                    priorityAlertShown = true;
-                }
-            }
-        }
-
-        // 2. Huy hiệu mới
-        if (!priorityAlertShown && userAchievements && userAchievements.length > 0) {
-            const newestAchievement = userAchievements.findLast(ua => {
-                if (ua.dateAchieved) {
-                    const achievementDate = new Date(ua.dateAchieved);
-                    const now = new Date();
-                    return Math.abs(now - achievementDate) / 36e5 < 24;
-                }
-                return false;
-            });
-
-            if (newestAchievement) {
-                const achievementName = newestAchievement.achievement.name;
-                const achievementDateStr = newestAchievement.dateAchieved;
-                const achievementKey = `shownAchievement-${achievementName}-${achievementDateStr}`;
-                const alreadyShown = localStorage.getItem(achievementKey);
-
-                if (!alreadyShown) {
-                    showAlert(`🎖️ Chúc mừng! Bạn vừa đạt được huy hiệu mới: "${achievementName}"!`, 'success', 8000);
-                    localStorage.setItem(achievementKey, "true");
-                    priorityAlertShown = true;
-                }
-            }
-        }
-
-        // 3. Các thông báo khác
-        if (!priorityAlertShown) {
-            if (smokeFreeDays > 0) {
-                showAlert(`🎉 Bạn đã không hút thuốc được ${smokeFreeDays} ngày và tiết kiệm được ${moneySaved.toLocaleString('vi-VN')} VND!`, 'info');
-            } else if (smokeFreeDays === 0 && latestSmokingLog && latestSmokingLog.cigarettesSmoked > 0) {
-                showAlert(`Bạn đã ghi nhận hút thuốc gần đây. Đừng nản lòng, hãy bắt đầu lại ngay hôm nay!`, 'warning', 10000);
-            } else if (smokeFreeDays === 0 && (!latestSmokingLog || latestSmokingLog.cigarettesSmoked === 0) && moneySaved === 0) {
-                showAlert('Chào mừng bạn! Hãy cập nhật hồ sơ và ghi nhận hoạt động hút thuốc để bắt đầu hành trình của bạn!', 'info', 10000);
-            }
-        }
-    }
-
-
-        // --- Fetch và Vẽ biểu đồ ---
-        if (userId) { // Đảm bảo userId tồn tại trước khi gọi API
-            // Biểu đồ số điếu thuốc hút hàng tuần
-            fetch(`/api/smoking/stats/weekly-chart-data`) // Đã bỏ userId=${userId}
-                .then(response => {
-                    if (!response.ok) {
-                        return response.text().then(text => { throw new Error(`Network response was not ok (${response.status} ${response.statusText}): ${text}`); });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data && data.labels && data.labels.length > 0 && data.data && data.data.length > 0) {
-                        const ctx = document.getElementById('weeklySmokingChart').getContext('2d');
-                        new Chart(ctx, {
-                            type: 'bar',
-                            data: {
-                                labels: data.labels,
-                                datasets: [{
-                                    label: data.title || 'Số điếu thuốc hút hàng tuần',
-                                    data: data.data,
-                                    backgroundColor: 'rgba(0, 123, 255, 0.7)',
-                                    borderColor: 'rgba(0, 123, 255, 1)',
-                                    borderWidth: 1
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                plugins: {
-                                    title: {
-                                        display: true,
-                                        text: data.title || 'Số điếu thuốc hút hàng tuần'
-                                    }
-                                },
-                                scales: {
-                                    y: {
-                                        beginAtZero: true,
-                                        title: {
-                                            display: true,
-                                            text: 'Số điếu'
-                                        },
-                                        ticks: {
-                                            precision: 0
-                                        }
-                                    },
-                                    x: {
-                                        title: {
-                                            display: true,
-                                            text: 'Tuần'
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                    } else {
-                        showAlert('Không có dữ liệu để vẽ biểu đồ số điếu thuốc hút hàng tuần.', 'info', 7000);
-                        console.warn("No data available for weekly smoking chart:", data);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching weekly smoking stats:', error);
-                    showAlert('Không thể tải dữ liệu biểu đồ tuần. Vui lòng thử lại sau.', 'error');
-                });
-
-            // Biểu đồ tiền tiết kiệm tích lũy
-            fetch(`/api/smoking/stats/money-saved-chart-data?daysToLookBack=90`) // Đã bỏ userId=${userId}
-                .then(response => {
-                    if (!response.ok) {
-                        return response.text().then(text => { throw new Error(`Network response was not ok (${response.status} ${response.statusText}): ${text}`); });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data && data.labels && data.labels.length > 0 && data.data && data.data.length > 0) {
-                        const ctx = document.getElementById('cumulativeMoneySavedChart').getContext('2d');
-                        new Chart(ctx, {
-                            type: 'line',
-                            data: {
-                                labels: data.labels,
-                                datasets: [{
-                                    label: data.title || 'Tiền tiết kiệm tích lũy',
-                                    data: data.data,
-                                    backgroundColor: 'rgba(40, 167, 69, 0.2)', // Light green fill
-                                    borderColor: 'rgba(40, 167, 69, 1)',
-                                    borderWidth: 2,
-                                    fill: true,
-                                    tension: 0.1
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                plugins: {
-                                    title: {
-                                        display: true,
-                                        text: data.title || 'Tiền tiết kiệm tích lũy'
-                                    },
-                                    tooltip: {
-                                        callbacks: {
-                                            label: function(context) {
-                                                let label = context.dataset.label || '';
-                                                if (label) {
-                                                    label += ': ';
-                                                }
-                                                // Định dạng số tiền
-                                                return label + new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(context.raw);
-                                            }
-                                        }
-                                    }
-                                },
-                                scales: {
-                                    y: {
-                                        beginAtZero: true,
-                                        title: {
-                                            display: true,
-                                            text: 'Số tiền (VND)'
-                                        },
-                                        // Định dạng nhãn trục Y
-                                        ticks: {
-                                            callback: function(value, index, values) {
-                                                return new Intl.NumberFormat('vi-VN').format(value); // Hiển thị số có dấu phân cách hàng nghìn
-                                            }
-                                        }
-                                    },
-                                    x: {
-                                        title: {
-                                            display: true,
-                                            text: 'Ngày'
-                                        },
-                                        ticks: {
-                                            autoSkip: true,
-                                            maxTicksLimit: 10
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                    } else {
-                        showAlert('Không có dữ liệu để vẽ biểu đồ tiền tiết kiệm tích lũy.', 'info', 7000);
-                        console.warn("No data available for cumulative money saved chart:", data);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching cumulative money saved stats:', error);
-                    showAlert('Không thể tải dữ liệu biểu đồ tiền tiết kiệm. Vui lòng thử lại sau.', 'error');
-                });
-
-        } else {
-            console.error("User ID not available for API calls. Charts will not load.");
-            showAlert('Không thể tải dữ liệu biểu đồ. Vui lòng đăng nhập lại.', 'error');
-        }
-    });
-</script>
 </body>
 </html>
->>>>>>> 35c6a47bdb5780cf48015a88cd926b4470d500c2

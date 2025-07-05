@@ -62,6 +62,7 @@ public class UserProfileController {
                 userUpdates.getQuitStartDate(),
                 userUpdates.getCigarettesPerDay(),
                 userUpdates.getCostPerPack(),
+                userUpdates.getCigarettesPerPack(),
                 userUpdates.getCessationGoal(), // Thêm trường này
                 userUpdates.getExpectedQuitDate() // Thêm trường này
             );

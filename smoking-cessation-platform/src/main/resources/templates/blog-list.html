@@ -9,80 +9,200 @@
     />
     <style>
       body {
-        font-family: Arial;
-        background-color: #f2f2f2;
-        padding: 20px;
+        font-family: Arial, sans-serif;
+        background-color: #f9f9f9;
+        padding: 30px;
       }
+
+      .blog-container {
+        max-width: 900px;
+        margin: auto;
+      }
+
+      .blog-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+      }
+
       .blog-post {
         background: white;
-        padding: 15px;
-        margin-bottom: 15px;
-        border-radius: 8px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-bottom: 25px;
+        border-radius: 10px;
+        border: 1px solid #ddd;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
       }
-      .blog-post h3 {
-        margin: 0;
+
+      .blog-post:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 12px rgba(0, 0, 0, 0.1);
       }
-      .blog-post small {
-        color: gray;
-      }
-      .write-btn {
-        display: inline-block;
-        margin-bottom: 20px;
-        padding: 10px 15px;
-        background: #007bff;
-        color: white;
+
+      .blog-post h3 a {
         text-decoration: none;
-        border-radius: 5px;
+        color: #007bff;
       }
-      .write-btn:hover {
-        background: #0056b3;
+
+      .blog-post h3 a:hover {
+        text-decoration: underline;
+      }
+
+      .blog-post small {
+        color: #194e7c;
+      }
+
+      .btn-write {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 5px;
+        text-decoration: none;
+      }
+
+      .btn-write:hover {
+        background-color: #0056b3;
+        color: white;
+      }
+
+      .btn-delete {
+        margin-top: 10px;
+      }
+
+      .form-section {
+        background: #ffffff;
+        border: 1px solid #ddd;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+      }
+
+      textarea {
+        resize: vertical;
       }
     </style>
   </head>
+
   <body>
-    <h2>📰 Blog Chia Sẻ Kinh Nghiệm Cai Thuốc</h2>
-    <a class="write-btn" th:href="@{/blogs/write}">📝 Viết bài chia sẻ</a>
-
-    <!-- ✅ Thông báo thành công hoặc lỗi khi xóa -->
-    <div
-      th:if="${successMessage}"
-      class="alert alert-success"
-      th:text="${successMessage}"
-    ></div>
-    <div
-      th:if="${errorMessage}"
-      class="alert alert-danger"
-      th:text="${errorMessage}"
-    ></div>
-
-    <div th:each="blog : ${blogs}" class="blog-post">
-      <h3>
-        <a th:href="@{'/blogs/' + ${blog.id}}" th:text="${blog.title}"
-          >[Tiêu đề]</a
-        >
-      </h3>
-      <small>
-        Tác giả: <span th:text="${blog.author}"></span> | Ngày:
-        <span
-          th:text="${#temporals.format(blog.createdAt, 'dd/MM/yyyy HH:mm')}"
-        ></span>
-      </small>
-
-      <!-- Nút xoá nếu muốn -->
-      <div class="mt-2 mb-2">
-        <a
-          th:href="@{'/blog/delete/' + ${blog.id}}"
-          class="btn btn-danger btn-sm"
-          onclick="return confirm('Bạn có chắc muốn xoá bài viết này?');"
-        >
-          🗑 Xoá
-        </a>
+    <div class="blog-container">
+      <div class="blog-header">
+        <h2>📰 Blog Chia Sẻ Kinh Nghiệm Cai Thuốc</h2>
+        <div class="d-flex gap-2 mt-2">
+          <a class="btn-write" th:href="@{/blogs/write}">📝 Viết bài chia sẻ</a>
+          <a class="btn btn-outline-secondary" th:href="@{/dashboard}"
+            >← Về Bảng Điều Khiển</a
+          >
+        </div>
       </div>
 
-      <p th:text="${#strings.abbreviate(blog.content, 200)}">
-        [Nội dung rút gọn]
-      </p>
+      <!-- ✅ Form Gửi Lời Động Viên -->
+      <div class="form-section">
+        <h5>💌 Gửi lời động viên</h5>
+        <form action="/blog/sendMotivation" method="post">
+          <div class="mb-2">
+            <input
+              type="text"
+              name="receiverUsername"
+              class="form-control"
+              placeholder="Tên người nhận"
+              required
+            />
+          </div>
+          <div class="mb-2">
+            <textarea
+              name="message"
+              class="form-control"
+              rows="3"
+              placeholder="Nhập lời động viên..."
+              required
+            ></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">
+            Gửi lời động viên
+          </button>
+        </form>
+      </div>
+
+      <!-- ✅ Form Chia Sẻ Huy Hiệu -->
+      <div class="form-section">
+        <h5>🏅 Chia sẻ huy hiệu</h5>
+        <form action="/blog/shareAchievement" method="post">
+          <div class="mb-2">
+            <input
+              type="text"
+              name="receiverUsername"
+              class="form-control"
+              placeholder="Tên người nhận"
+              required
+            />
+          </div>
+          <div class="mb-2">
+            <select name="achievementId" class="form-select" required>
+              <option
+                th:each="ach : ${achievements}"
+                th:value="${ach.id}"
+                th:text="${ach.name}"
+              >
+                [Huy hiệu]
+              </option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-success">
+            Chia sẻ huy hiệu
+          </button>
+        </form>
+      </div>
+      <a href="/chat/select" class="btn btn-outline-success mt-3"
+        >💬 Chat với Coach</a
+      >
+      <!-- ✅ Thông báo -->
+      <div
+        th:if="${successMessage}"
+        class="alert alert-success"
+        th:text="${successMessage}"
+      ></div>
+      <div
+        th:if="${errorMessage}"
+        class="alert alert-danger"
+        th:text="${errorMessage}"
+      ></div>
+
+      <!-- ✅ Danh sách bài viết -->
+      <div th:each="blog : ${blogs}" class="blog-post">
+        <h3>
+          <a th:href="@{'/blogs/' + ${blog.id}}" th:text="${blog.title}">
+            [Tiêu đề]
+          </a>
+        </h3>
+        <small>
+          ✍️ Tác giả:
+          <span th:text="${blog.author}"></span>
+          | 📅 Ngày:
+          <span
+            th:text="${#temporals.format(blog.createdAt, 'dd/MM/yyyy HH:mm')}"
+          ></span>
+        </small>
+
+        <p class="mt-3" th:text="${#strings.abbreviate(blog.content, 200)}">
+          [Nội dung rút gọn]
+        </p>
+
+        <!-- ✅ Chỉ hiện nút xóa nếu là tác giả hoặc admin -->
+        <div
+          th:if="${blog.author == #authentication.name or userRole == 'ADMIN'}"
+        >
+          <a
+            th:href="@{'/blog/delete/' + ${blog.id}}"
+            class="btn btn-sm btn-danger btn-delete"
+            onclick="return confirm('Bạn có chắc muốn xoá bài viết này?');"
+          >
+            🗑 Xoá bài viết
+          </a>
+        </div>
+      </div>
     </div>
   </body>
 </html>

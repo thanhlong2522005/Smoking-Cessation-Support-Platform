@@ -70,7 +70,6 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserAchievement> userAchievements = new HashSet<>();
 
-<<<<<<< HEAD
     @ManyToOne
     @JoinColumn(name = "membership_package_id")
     private MembershipPackage membershipPackage;
@@ -84,8 +83,6 @@ public class User {
         this.membershipPackage = membershipPackage;
     }
 
-=======
->>>>>>> 35c6a47bdb5780cf48015a88cd926b4470d500c2
     // Constructor tùy chỉnh nếu cần (Lombok @AllArgsConstructor đã bao gồm tất cả các trường)
     // Nếu bạn muốn một constructor chỉ với một số trường, bạn có thể tạo thủ công hoặc dùng @Builder của Lombok
     // Constructor bạn đã cung cấp chỉ bao gồm một phần của các trường

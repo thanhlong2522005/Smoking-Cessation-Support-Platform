@@ -22,11 +22,7 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(authorize -> authorize
                 // Cho phép truy cập các URL này mà không cần xác thực
-<<<<<<< HEAD
                 .requestMatchers("/", "/register","/login","/membership","/payment-success","/css/**", "/js/**", "/images/**", "/api/public/**").permitAll()
-=======
-                .requestMatchers("/", "/register", "/css/**", "/js/**", "/images/**", "/api/public/**").permitAll()
->>>>>>> 35c6a47bdb5780cf48015a88cd926b4470d500c2
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/rate").hasAnyRole("MEMBER", "COACH")
                 // Yêu cầu xác thực cho tất cả các request khác
